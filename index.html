@@ -304,6 +304,15 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 .fm-input:focus,.fm-select:focus,.fm-textarea:focus{border-color:var(--az2)}
 .fm-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
+/* ADMIN FILTER BAR */
+.adm-filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;background:var(--br);border:1px solid var(--bd2);border-radius:var(--r);padding:12px 16px;box-shadow:var(--sh)}
+.adm-filter-lbl{font-size:11px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.adm-filter-select{flex:1;max-width:320px;border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 12px;font-family:'Nunito Sans',sans-serif;font-size:13.5px;color:var(--tx);background:var(--br);outline:none;cursor:pointer;transition:border-color .15s}
+.adm-filter-select:focus{border-color:var(--az2)}
+.adm-filter-count{margin-left:auto;font-size:12px;color:var(--mt2);font-weight:600}
+.adm-filter-clear{font-size:12px;color:var(--az2);cursor:pointer;font-weight:600;white-space:nowrap;text-decoration:none}
+.adm-filter-clear:hover{color:var(--az1)}
+
 /* TOAST */
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--az1);color:#fff;padding:11px 22px;border-radius:30px;font-size:13.5px;font-weight:600;opacity:0;transition:all .28s;z-index:9999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -604,18 +613,42 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
       <div class="adm-page" id="adm-visitas">
         <div class="adm-section-title">Visitas</div>
         <div class="adm-section-desc">Cadastre encontros realizados com cada cliente.</div>
+        <div class="adm-filter-bar">
+          <span class="adm-filter-lbl">🔍 Cliente</span>
+          <select class="adm-filter-select" id="filter-visitas-cliente" onchange="filterAdmTable('visitas')">
+            <option value="">Todos os clientes</option>
+          </select>
+          <span class="adm-filter-count" id="filter-visitas-count"></span>
+          <a class="adm-filter-clear" onclick="clearFilter('visitas')">Limpar</a>
+        </div>
         <div class="adm-add-bar"><button class="adm-btn adm-btn-primary" onclick="openModal('visita')">+ Nova visita</button></div>
         <div class="adm-table-wrap"><table class="adm-table"><thead><tr><th>Cliente</th><th>Nº</th><th>Título</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbl-visitas"></tbody></table></div>
       </div>
       <div class="adm-page" id="adm-materiais">
         <div class="adm-section-title">Materiais</div>
         <div class="adm-section-desc">Adicione links e documentos às visitas.</div>
+        <div class="adm-filter-bar">
+          <span class="adm-filter-lbl">🔍 Cliente</span>
+          <select class="adm-filter-select" id="filter-materiais-cliente" onchange="filterAdmTable('materiais')">
+            <option value="">Todos os clientes</option>
+          </select>
+          <span class="adm-filter-count" id="filter-materiais-count"></span>
+          <a class="adm-filter-clear" onclick="clearFilter('materiais')">Limpar</a>
+        </div>
         <div class="adm-add-bar"><button class="adm-btn adm-btn-primary" onclick="openModal('material')">+ Novo material</button></div>
         <div class="adm-table-wrap"><table class="adm-table"><thead><tr><th>Visita</th><th>Nome</th><th>Tipo</th><th>Link</th><th>Ações</th></tr></thead><tbody id="tbl-materiais"></tbody></table></div>
       </div>
       <div class="adm-page" id="adm-acoes">
         <div class="adm-section-title">Plano de Ação</div>
         <div class="adm-section-desc">Gerencie as ações do plano por cliente.</div>
+        <div class="adm-filter-bar">
+          <span class="adm-filter-lbl">🔍 Cliente</span>
+          <select class="adm-filter-select" id="filter-acoes-cliente" onchange="filterAdmTable('acoes')">
+            <option value="">Todos os clientes</option>
+          </select>
+          <span class="adm-filter-count" id="filter-acoes-count"></span>
+          <a class="adm-filter-clear" onclick="clearFilter('acoes')">Limpar</a>
+        </div>
         <div class="adm-add-bar"><button class="adm-btn adm-btn-primary" onclick="openModal('acao')">+ Nova ação</button></div>
         <div class="adm-table-wrap"><table class="adm-table"><thead><tr><th>Cliente</th><th>Ação</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbl-acoes"></tbody></table></div>
       </div>
@@ -1294,6 +1327,64 @@ function admPage(id,el){
   if(id === 'biblioteca') loadAdmBiblioteca()
 }
 
+// ══════════════════════════════════════════════
+//  FILTROS ADMIN
+// ══════════════════════════════════════════════
+let _admData = { clients:[], visits:[], materials:[], acoes:[] }
+
+function populateClientFilter(selectId, clients){
+  const sel = document.getElementById(selectId)
+  if(!sel) return
+  const cur = sel.value
+  sel.innerHTML = '<option value="">Todos os clientes</option>' +
+    clients.map(c => `<option value="${c.id}" ${cur===c.id?'selected':''}>${c.nome}</option>`).join('')
+}
+
+function filterAdmTable(tab){
+  const clientId = document.getElementById(`filter-${tab}-cliente`)?.value || ''
+  const countEl = document.getElementById(`filter-${tab}-count`)
+
+  if(tab === 'visitas'){
+    const rows = document.querySelectorAll('#tbl-visitas tr')
+    let visible = 0
+    rows.forEach(r => {
+      const show = !clientId || r.dataset.clientId === clientId
+      r.style.display = show ? '' : 'none'
+      if(show) visible++
+    })
+    if(countEl) countEl.textContent = clientId ? `${visible} visita${visible!==1?'s':''}` : ''
+  }
+
+  if(tab === 'materiais'){
+    const rows = document.querySelectorAll('#tbl-materiais tr')
+    let visible = 0
+    rows.forEach(r => {
+      const show = !clientId || r.dataset.clientId === clientId
+      r.style.display = show ? '' : 'none'
+      if(show) visible++
+    })
+    if(countEl) countEl.textContent = clientId ? `${visible} material${visible!==1?'is':''}` : ''
+  }
+
+  if(tab === 'acoes'){
+    const rows = document.querySelectorAll('#tbl-acoes tr')
+    let visible = 0
+    rows.forEach(r => {
+      const show = !clientId || r.dataset.clientId === clientId
+      r.style.display = show ? '' : 'none'
+      if(show) visible++
+    })
+    if(countEl) countEl.textContent = clientId ? `${visible} ação${visible!==1?'ões':''}` : ''
+  }
+}
+
+function clearFilter(tab){
+  const sel = document.getElementById(`filter-${tab}-cliente`)
+  if(sel){ sel.value = ''; filterAdmTable(tab) }
+  const countEl = document.getElementById(`filter-${tab}-count`)
+  if(countEl) countEl.textContent = ''
+}
+
 async function renderAdminTables(){
   const [clRes, vRes, mRes, aRes] = await Promise.all([
     sb.from('clientes').select('*').order('nome'),
@@ -1311,6 +1402,12 @@ async function renderAdminTables(){
   const stLabel  = {done:'Concluída',new:'Novo',pending:'Agendada',future:'Planejada'}
   const stBadge  = {done:'b-done',new:'b-new',pending:'b-pending',future:'b-future'}
 
+  // Populate client filters in all tabs
+  _admData.clients = clients
+  populateClientFilter('filter-visitas-cliente', clients)
+  populateClientFilter('filter-materiais-cliente', clients)
+  populateClientFilter('filter-acoes-cliente', clients)
+
   const tipoLabel = {nr1:'NR-1',assessoria:'Assessoria',personalizado:'Personalizado'}
   document.getElementById('tbl-clientes').innerHTML = clients.map(c=>{
     const modelo = tipoLabel[c.tipo_portal||'nr1']||c.tipo_portal||'NR-1'
@@ -1323,20 +1420,35 @@ async function renderAdminTables(){
   }).join('')
 
   document.getElementById('tbl-visitas').innerHTML = visits.map(v=>`
-    <tr><td>${v.clientes?.nome||'–'}</td><td>${v.numero}</td><td><strong>${v.titulo}</strong></td><td>${v.data_visita}</td>
-    <td><span class="badge ${stBadge[v.status]||'b-future'}">${stLabel[v.status]||v.status}</span></td>
-    <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('visita','${v.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('visitas','${v.id}')">🗑</button></td></tr>`).join('')
+    <tr data-client-id="${v.cliente_id||''}">
+      <td><strong>${v.clientes?.nome||'–'}</strong></td><td>${v.numero}</td><td>${v.titulo}</td><td>${v.data_visita}</td>
+      <td><span class="badge ${stBadge[v.status]||'b-future'}">${stLabel[v.status]||v.status}</span></td>
+      <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('visita','${v.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('visitas','${v.id}')">🗑</button></td>
+    </tr>`).join('')
+  // Re-apply active filter
+  filterAdmTable('visitas')
 
   document.getElementById('tbl-materiais').innerHTML = materials.map(m=>`
-    <tr><td>${m.visitas?.clientes?.nome||'–'} · V${m.visitas?.numero||'?'}</td><td><strong>${m.nome}</strong></td><td>${{pdf:'PDF',video:'Vídeo',form:'Formulário/Teste',doc:'Documento',manual:'Manual',procedimento:'Procedimento',risco:'Relatório de Riscos'}[m.tipo]||m.tipo.toUpperCase()}</td>
-    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.url&&m.url!=='#'?`<a href="${m.url}" target="_blank" style="color:var(--az2)">${m.url.substring(0,35)}...</a>`:'–'}</td>
-    <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('material','${m.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('materiais','${m.id}')">🗑</button></td></tr>`).join('')
+    <tr data-client-id="${m.visitas?.cliente_id||''}">
+      <td><strong>${m.visitas?.clientes?.nome||'–'}</strong> · V${m.visitas?.numero||'?'}</td>
+      <td>${m.nome}</td>
+      <td>${{pdf:'📊 PDF',video:'▶️ Vídeo',form:'📝 Formulário',doc:'📁 Documento',manual:'📖 Manual',procedimento:'📋 Procedimento',risco:'⚠️ Riscos'}[m.tipo]||m.tipo}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.url&&m.url!=='#'?`<a href="${m.url}" target="_blank" style="color:var(--az2)">${m.url.substring(0,35)}...</a>`:'–'}</td>
+      <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('material','${m.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('materiais','${m.id}')">🗑</button></td>
+    </tr>`).join('')
+  filterAdmTable('materiais')
 
   document.getElementById('tbl-acoes').innerHTML = acoes.map(a=>`
-    <tr><td>${a.clientes?.nome||'–'}</td><td><strong>${a.titulo}</strong></td><td>${a.responsavel||'–'}</td><td>${a.prazo||'–'}</td>
-    <td><span class="acao-pri ${a.prioridade==='alta'?'pa':a.prioridade==='baixa'?'pb':'pm'}">${priLabel[a.prioridade]||'Média'}</span></td>
-    <td><span class="badge ${a.concluida?'b-done':'b-future'}">${a.concluida?'Concluída':'Em aberto'}</span></td>
-    <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('acao','${a.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('acoes_plano','${a.id}')">🗑</button></td></tr>`).join('')
+    <tr data-client-id="${a.cliente_id||''}">
+      <td><strong>${a.clientes?.nome||'–'}</strong></td>
+      <td>${a.titulo}</td>
+      <td>${a.responsavel||'–'}</td>
+      <td>${a.prazo||'–'}</td>
+      <td><span class="acao-pri ${a.prioridade==='alta'?'pa':a.prioridade==='baixa'?'pb':'pm'}">${priLabel[a.prioridade]||'Média'}</span></td>
+      <td><span class="badge ${a.concluida?'b-done':'b-future'}">${a.concluida?'Concluída':'Em aberto'}</span></td>
+      <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('acao','${a.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('acoes_plano','${a.id}')">🗑</button></td>
+    </tr>`).join('')
+  filterAdmTable('acoes')
 }
 
 async function delItem(table, id){
