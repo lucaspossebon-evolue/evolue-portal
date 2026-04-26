@@ -346,6 +346,22 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 /* TOAST */
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--az1);color:#fff;padding:11px 22px;border-radius:30px;font-size:13.5px;font-weight:600;opacity:0;transition:all .28s;z-index:9999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.pdf-drop{border:2px dashed var(--bd);border-radius:var(--rsm);padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cr);margin-top:6px}
+.pdf-drop:hover,.pdf-drop.over{border-color:var(--az2);background:var(--azp)}
+.pdf-drop-txt{font-size:13px;font-weight:600;color:var(--mt);margin-bottom:3px}
+.pdf-drop-sub{font-size:11px;color:var(--mt2)}
+.pdf-prog{height:5px;background:var(--bd2);border-radius:10px;overflow:hidden;margin-top:10px;display:none}
+.pdf-prog-bar{height:100%;background:linear-gradient(90deg,var(--az2),var(--az3));border-radius:10px;transition:width .3s;width:0%}
+.pdf-file-ok{display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--azp);border:1px solid var(--azp2);border-radius:var(--rsm);margin-top:8px;font-size:12.5px;font-weight:600;color:var(--az1)}
+.pdf-acao-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--bd2);border-radius:var(--rsm);margin-bottom:7px;background:var(--br)}
+.pdf-acao-item:hover{border-color:var(--az2)}
+.pdf-acao-chk{width:16px;height:16px;accent-color:var(--az1);flex-shrink:0;margin-top:3px;cursor:pointer}
+.pdf-acao-body{flex:1;min-width:0}
+.pdf-acao-titulo{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:5px}
+.pdf-acao-fields{display:flex;gap:7px;flex-wrap:wrap}
+.pdf-acao-input{border:1px solid var(--bd2);border-radius:var(--rxs);padding:4px 8px;font-size:12px;font-family:'Nunito Sans',sans-serif;color:var(--tx);background:var(--br);outline:none;flex:1;min-width:80px;transition:border-color .15s}
+.pdf-acao-input:focus{border-color:var(--az2)}
+.pdf-preview-hdr{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--mt2);margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--bd2)}
 
 /* UPLOAD */
 .upload-area{border:2px dashed var(--bd);border-radius:var(--r);padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cr);margin-bottom:10px}
@@ -1489,9 +1505,8 @@ async function renderAdminTables(){
     <tr data-client-id="${v.cliente_id||''}">
       <td><strong>${v.clientes?.nome||'–'}</strong></td><td>${v.numero}</td><td>${v.titulo}</td><td>${v.data_visita}</td>
       <td><span class="badge ${stBadge[v.status]||'b-future'}">${stLabel[v.status]||v.status}</span></td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="openImportModal('${v.id}','${v.clientes?.nome||''}','${v.cliente_id||''}','${v.titulo||''}')">📄 Importar PDF</button>
-        <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('visita','${v.id}')">✏️</button>
+      <td style="display:flex;gap:6px">
+        <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('visita','${v.id}')">✏️ Editar</button>
         <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('visitas','${v.id}')">🗑</button>
       </td>
     </tr>`).join('')
@@ -1533,8 +1548,11 @@ async function delItem(table, id){
 // ══════════════════════════════════════════════
 let _modalMode = null, _modalId = null, _clientsCache = [], _visitsCache = []
 
+let _pdfFile = null, _pdfAcoes = []
+
 async function openModal(type, editId=null){
   _modalMode = type; _modalId = editId
+  _pdfFile = null; _pdfAcoes = []
   const titles = {cliente:'Cliente',visita:'Visita',material:'Material',acao:'Ação do Plano'}
   document.getElementById('modal-title').textContent = (editId ? 'Editar ' : 'Novo ') + titles[type]
 
@@ -1620,7 +1638,22 @@ async function openModal(type, editId=null){
         <option value="new" ${item.status==='new'?'selected':''}>Novo</option>
         <option value="pending" ${item.status==='pending'?'selected':''}>Agendada</option>
         <option value="future" ${item.status==='future'?'selected':''}>Planejada</option>
-      </select></div>`,
+      </select></div>
+      <div class="fm-group" style="border-top:1px solid var(--bd2);padding-top:14px;margin-top:6px">
+        <label class="fm-label">📄 Relatório PDF <span style="font-weight:400;color:var(--mt2);text-transform:none;letter-spacing:0">(opcional)</span></label>
+        <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onPdfDrop(event)">
+          <div style="font-size:22px;margin-bottom:6px">📋</div>
+          <div class="pdf-drop-txt">Clique ou arraste o PDF do relatório</div>
+          <div class="pdf-drop-sub">Salvo em Relatórios de Visita · Ações extraídas para o Plano de Ação</div>
+        </div>
+        <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="onPdfSelect(this.files[0])">
+        <div class="pdf-prog" id="pdf-prog"><div class="pdf-prog-bar" id="pdf-bar"></div></div>
+        <div class="pdf-file-ok" id="pdf-file-ok">📎 <span id="pdf-file-name"></span></div>
+      </div>
+      <div id="pdf-acoes-wrap" style="display:none">
+        <div class="pdf-preview-hdr">✅ Ações encontradas — edite, marque e confirme para salvar no Plano de Ação</div>
+        <div id="pdf-acoes-list"></div>
+      </div>`,
     material:`
       <div class="fm-group"><label class="fm-label">Visita</label><select class="fm-select" id="fm-visit">${visitOpts}</select></div>
       <div class="fm-group"><label class="fm-label">Nome do material</label><input class="fm-input" id="fm-mnom" value="${item.nome||''}"></div>
@@ -1710,8 +1743,18 @@ async function saveModal(){
     if(!payload.titulo){ showToast('Informe o título!'); return; }
   }
 
-  if(_modalId){ await sb.from(table).update(payload).eq('id', _modalId) }
-  else { await sb.from(table).insert(payload) }
+  if(_modalId){
+    await sb.from(table).update(payload).eq('id', _modalId)
+    if(table === 'visitas' && payload.cliente_id){
+      await _savePdfAndAcoes(_modalId, payload.cliente_id)
+    }
+  } else {
+    const { data: _ins, error: _insErr } = await sb.from(table).insert(payload).select()
+    if(_insErr){ showToast('Erro ao salvar: ' + _insErr.message); return; }
+    if(table === 'visitas' && _ins && _ins[0] && payload.cliente_id){
+      await _savePdfAndAcoes(_ins[0].id, payload.cliente_id)
+    }
+  }
 
   showToast('✓ Salvo com sucesso!')
   closeModal()
@@ -1719,6 +1762,213 @@ async function saveModal(){
 }
 
 async function editItem(type, id){ await openModal(type, id) }
+// ── PDF IMPORT ───────────────────────────────
+function onPdfDrop(e){
+  e.preventDefault()
+  document.getElementById('pdf-drop').classList.remove('over')
+  var f = e.dataTransfer.files[0]
+  if(f && f.type === 'application/pdf') onPdfSelect(f)
+  else showToast('Envie um arquivo PDF.')
+}
+
+function onPdfSelect(file){
+  if(!file) return
+  _pdfFile = file
+  var bar = document.getElementById('pdf-bar')
+  var prog = document.getElementById('pdf-prog')
+  var okEl = document.getElementById('pdf-file-ok')
+  var nameEl = document.getElementById('pdf-file-name')
+  prog.style.display = 'block'
+  bar.style.width = '20%'
+
+  var reader = new FileReader()
+  reader.onload = async function(e){
+    bar.style.width = '50%'
+    try {
+      var typedArr = new Uint8Array(e.target.result)
+      var loadingTask = pdfjsLib.getDocument({ data: typedArr })
+      var pdf = await loadingTask.promise
+      var fullText = ''
+      for(var i = 1; i <= pdf.numPages; i++){
+        var page = await pdf.getPage(i)
+        var tc = await page.getTextContent()
+        fullText += tc.items.map(function(it){ return it.str }).join(' ') + ' '
+      }
+      bar.style.width = '90%'
+      _pdfAcoes = _extractAcoes(fullText)
+      bar.style.width = '100%'
+      nameEl.textContent = file.name
+      okEl.style.display = 'flex'
+      if(_pdfAcoes.length > 0){
+        _renderAcoesPreview(_pdfAcoes)
+        document.getElementById('pdf-acoes-wrap').style.display = 'block'
+        showToast(_pdfAcoes.length + ' ação(ões) extraída(s) do PDF!')
+      } else {
+        document.getElementById('pdf-acoes-wrap').style.display = 'none'
+        showToast('PDF carregado. Nenhuma ação encontrada em "Próximos Passos".')
+      }
+    } catch(err){
+      showToast('Erro ao ler PDF: ' + err.message)
+    }
+    setTimeout(function(){ prog.style.display='none'; bar.style.width='0%' }, 600)
+  }
+  reader.readAsArrayBuffer(file)
+}
+
+function _extractAcoes(text){
+  var acoes = []
+  var norm = text.replace(/\s+/g, ' ').trim()
+  // Also handle "Próxima visita" as prazo
+
+
+  // Find the Proximos Passos section
+  var starts = ['Próximos Passos', 'Proximos Passos', 'PRÓXIMOS PASSOS', 'Plano de Ação']
+  var secStart = -1
+  for(var s of starts){
+    var idx = norm.indexOf(s)
+    if(idx !== -1){ secStart = idx; break }
+  }
+  if(secStart === -1) return acoes
+
+  // Find end of section
+  var ends = ['Resultados Esperados', 'RESULTADOS ESPERADOS', 'Conclusão', 'CONCLUSÃO']
+  var secEnd = norm.length
+  for(var e of ends){
+    var ei = norm.indexOf(e, secStart)
+    if(ei !== -1 && ei < secEnd) secEnd = ei
+  }
+
+  var section = norm.substring(secStart, secEnd)
+
+  // Split by prazo keywords to find table rows
+  var prazos = ['Curto prazo', 'Médio prazo', 'Longo prazo', 'Imediato',
+                'curto prazo', 'médio prazo', 'longo prazo', 'imediato']
+  
+  var prazoRx = /Próxima visita|Próximo mês|Curto prazo|Médio prazo|Longo prazo|Imediato|proxima visita|próxima visita|curto prazo|médio prazo|longo prazo|imediato/gi
+  var parts = section.split(prazoRx)
+  var matches = section.match(prazoRx) || []
+
+  for(var i = 0; i < matches.length; i++){
+    var chunk = parts[i] || ''
+    var prazo = matches[i] || 'Curto prazo'
+
+    // The part AFTER prazo (parts[i+1]) contains the Observação + next action
+    // We ignore it completely — only work with chunk BEFORE the prazo keyword
+
+    // Clean chunk - remove table headers and leading numbers
+    chunk = chunk
+      .replace(/Etapa\s+Ação\s+Responsável\s+Prazo\s+Observações/gi, '')
+      .replace(/Etapa\s+Ação\s+Responsável/gi, '')
+      .replace(/^\s*\d+\s+/, '')
+      .trim()
+
+    if(chunk.length < 5) continue
+
+    // The chunk contains: [action text] [responsavel]
+    // Responsavel is typically at the end: "Nome / Nome" or "Nome"
+    // Pattern: one or more capitalized words, possibly with "/" separator
+    var respRx = /\s([A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+(?:\s*[\/]\s*[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+)*(?:\s*[\/]\s*(?:Gestão|Equipe|Gestores|Karla|Lucas|Grasiela|Daniela|João|Milton|Equipe))*)\s*$/
+    var respMatch = chunk.match(respRx)
+    var titulo = chunk
+    var responsavel = ''
+
+    if(respMatch && respMatch[1] && respMatch[1].length < 50){
+      responsavel = respMatch[1].trim()
+      var lastIdx = chunk.lastIndexOf(responsavel)
+      if(lastIdx > 5) titulo = chunk.substring(0, lastIdx).trim()
+    }
+
+    // Final cleanup of titulo
+    titulo = titulo
+      .replace(/^\d+\s+/, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    if(titulo.length > 5){
+      var prazoLow = prazo.toLowerCase()
+      var pri = prazoLow.includes('médio') || prazoLow.includes('medio') ? 'media'
+              : prazoLow.includes('longo') ? 'baixa' : 'alta'
+      acoes.push({ titulo: titulo, responsavel: responsavel, prazo: prazo, prioridade: pri })
+    }
+  }
+  return acoes.slice(0, 20)
+}
+
+function _renderAcoesPreview(acoes){
+  var html = acoes.map(function(a, i){
+    return '<div class="pdf-acao-item" id="pai-' + i + '">' +
+      '<input type="checkbox" class="pdf-acao-chk" id="pc-' + i + '" checked onchange="_toggleAcaoItem(' + i + ',this.checked)">' +
+      '<div class="pdf-acao-body">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--mt2);margin-bottom:4px">Ação ' + (i+1) + '</div>' +
+        '<textarea class="pdf-acao-input" id="pt-' + i + '" rows="2" style="width:100%;resize:vertical;margin-bottom:6px;padding:6px 8px;font-size:13px;line-height:1.5">' + a.titulo + '</textarea>' +
+        '<div class="pdf-acao-fields">' +
+          '<input class="pdf-acao-input" id="pr-' + i + '" value="' + a.responsavel + '" placeholder="Responsável">' +
+          '<input class="pdf-acao-input" id="pp-' + i + '" value="' + a.prazo + '" placeholder="Prazo" style="max-width:130px">' +
+          '<select class="pdf-acao-input" id="ppr-' + i + '" style="max-width:105px">' +
+            '<option value="alta" selected>🔴 Alta</option>' +
+            '<option value="media">🟡 Média</option>' +
+            '<option value="baixa">🟢 Baixa</option>' +
+          '</select>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  }).join('')
+  document.getElementById('pdf-acoes-list').innerHTML = html
+}
+
+function _toggleAcaoItem(i, checked){
+  var item = document.getElementById('pai-' + i)
+  if(item){
+    item.style.opacity = checked ? '1' : '0.4'
+    item.style.borderColor = checked ? '' : 'var(--bd2)'
+  }
+}
+
+async function _savePdfAndAcoes(visitaId, clienteId){
+  // 1. Upload PDF to storage
+  if(_pdfFile){
+    var safeName = _pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    var path = 'uploads/' + Date.now() + '_' + safeName
+    var up = await sb.storage.from(BUCKET).upload(path, _pdfFile, { upsert: true })
+    if(!up.error){
+      var urlData = sb.storage.from(BUCKET).getPublicUrl(path)
+      await sb.from('materiais').insert({
+        visita_id: visitaId,
+        nome: _pdfFile.name.replace(/\.pdf$/i, ''),
+        tipo: 'pdf',
+        url: urlData.data.publicUrl
+      })
+    }
+  }
+  // 2. Save selected acoes
+  if(_pdfAcoes.length > 0 && clienteId){
+    var toSave = []
+    for(var i = 0; i < _pdfAcoes.length; i++){
+      var chk = document.getElementById('pc-' + i)
+      if(chk && chk.checked){
+        var tituloEl = document.getElementById('pt-' + i)
+        var respEl   = document.getElementById('pr-' + i)
+        var prazoEl  = document.getElementById('pp-' + i)
+        var priEl    = document.getElementById('ppr-' + i)
+        var titulo   = tituloEl ? tituloEl.value.trim() : _pdfAcoes[i].titulo
+        if(!titulo) continue
+        toSave.push({
+          cliente_id: clienteId,
+          titulo: titulo,
+          responsavel: respEl ? respEl.value.trim() : _pdfAcoes[i].responsavel,
+          prazo: prazoEl ? prazoEl.value.trim() : _pdfAcoes[i].prazo,
+          prioridade: priEl ? priEl.value : 'alta',
+          concluida: false
+        })
+      }
+    }
+    if(toSave.length > 0){
+      await sb.from('acoes_plano').insert(toSave)
+      showToast(toSave.length + ' ação(ões) adicionadas ao Plano de Ação!')
+    }
+  }
+}
+
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('open') }
 
 // ══════════════════════════════════════════════
