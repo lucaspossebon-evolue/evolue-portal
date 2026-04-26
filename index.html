@@ -32,6 +32,8 @@
 
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -312,6 +314,34 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 .adm-filter-count{margin-left:auto;font-size:12px;color:var(--mt2);font-weight:600}
 .adm-filter-clear{font-size:12px;color:var(--az2);cursor:pointer;font-weight:600;white-space:nowrap;text-decoration:none}
 .adm-filter-clear:hover{color:var(--az1)}
+
+/* IMPORTAR PDF */
+.import-modal-overlay{position:fixed;inset:0;background:rgba(27,58,107,.4);z-index:700;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.import-modal-overlay.open{opacity:1;pointer-events:auto}
+.import-modal{background:var(--br);border-radius:var(--r);width:640px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(27,58,107,.2);animation:modalIn .2s ease}
+.import-modal-head{padding:18px 24px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--br);z-index:5}
+.import-modal-title{font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;color:var(--az1)}
+.import-modal-body{padding:22px 24px}
+.import-drop{border:2px dashed var(--bd);border-radius:var(--r);padding:36px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cr)}
+.import-drop:hover,.import-drop.drag-over{border-color:var(--az2);background:var(--azp)}
+.import-drop-icon{font-size:36px;margin-bottom:10px}
+.import-drop-txt{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.import-drop-sub{font-size:12px;color:var(--mt2)}
+.import-progress{height:6px;background:var(--bd2);border-radius:10px;overflow:hidden;margin:14px 0;display:none}
+.import-progress-bar{height:100%;background:linear-gradient(90deg,var(--az2),var(--az3));border-radius:10px;transition:width .3s;width:0%}
+.import-status{font-size:13px;color:var(--mt);margin:8px 0;text-align:center;min-height:20px}
+.import-preview{margin-top:18px;display:none}
+.import-preview-title{font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;color:var(--az1);margin-bottom:4px}
+.import-preview-sub{font-size:12px;color:var(--mt2);margin-bottom:14px}
+.import-acao-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--bd2);border-radius:var(--rsm);margin-bottom:8px;background:var(--br);transition:border-color .15s}
+.import-acao-item:hover{border-color:var(--az2)}
+.import-acao-check{width:18px;height:18px;border-radius:4px;accent-color:var(--az1);flex-shrink:0;margin-top:2px;cursor:pointer}
+.import-acao-body{flex:1;min-width:0}
+.import-acao-titulo{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:4px}
+.import-acao-meta{display:flex;gap:8px;flex-wrap:wrap}
+.import-acao-input{border:1px solid var(--bd2);border-radius:var(--rxs);padding:3px 8px;font-size:12px;font-family:'Nunito Sans',sans-serif;color:var(--tx);background:var(--br);outline:none;flex:1;min-width:80px}
+.import-acao-input:focus{border-color:var(--az2)}
+.import-pdf-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--azp);border:1px solid var(--azp2);border-radius:var(--rsm);margin-bottom:14px;font-size:13px;font-weight:600;color:var(--az1)}
 
 /* TOAST */
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--az1);color:#fff;padding:11px 22px;border-radius:30px;font-size:13.5px;font-weight:600;opacity:0;transition:all .28s;z-index:9999;white-space:nowrap}
@@ -699,6 +729,42 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 
 <button class="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('mob-open')">☰</button>
 <div class="toast" id="toast"></div>
+
+<!-- IMPORT PDF MODAL -->
+<div class="import-modal-overlay" id="import-modal-overlay" onclick="closeImportModalOut(event)">
+  <div class="import-modal">
+    <div class="import-modal-head">
+      <div class="import-modal-title">📄 Importar Relatório PDF</div>
+      <button class="panel-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="import-modal-body">
+      <div id="import-visita-info" style="font-size:13px;color:var(--mt);margin-bottom:16px;padding:10px 14px;background:var(--cr);border-radius:var(--rsm);border:1px solid var(--bd2)"></div>
+      
+      <div class="import-drop" id="import-drop-area" onclick="document.getElementById('import-file-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleImportDrop(event)">
+        <div class="import-drop-icon">📋</div>
+        <div class="import-drop-txt">Clique ou arraste o PDF do relatório</div>
+        <div class="import-drop-sub">O sistema extrairá as ações automaticamente e salvará o PDF em Relatórios de Visita</div>
+      </div>
+      <input type="file" id="import-file-input" accept=".pdf" style="display:none" onchange="processImportPDF(this.files[0])">
+      
+      <div class="import-progress" id="import-progress">
+        <div class="import-progress-bar" id="import-progress-bar"></div>
+      </div>
+      <div class="import-status" id="import-status"></div>
+
+      <div class="import-preview" id="import-preview">
+        <div class="import-pdf-badge" id="import-pdf-badge">📎 <span id="import-pdf-name">–</span> <span style="margin-left:auto;font-size:11px;color:var(--az3)">✅ Salvo em Relatórios de Visita</span></div>
+        <div class="import-preview-title">✅ Ações encontradas — revise antes de salvar</div>
+        <div class="import-preview-sub">Marque as ações que deseja incluir no Plano de Ação. Edite responsável e prazo se necessário.</div>
+        <div id="import-acoes-list"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="adm-btn adm-btn-ghost" onclick="closeImportModal()">Cancelar</button>
+          <button class="adm-btn adm-btn-primary" style="flex:1" onclick="saveImportedAcoes()">✅ Salvar ações no Plano de Ação</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // ══════════════════════════════════════════════
@@ -1388,8 +1454,8 @@ function clearFilter(tab){
 async function renderAdminTables(){
   const [clRes, vRes, mRes, aRes] = await Promise.all([
     sb.from('clientes').select('*').order('nome'),
-    sb.from('visitas').select('*, clientes(nome)').order('criado_em'),
-    sb.from('materiais').select('*, visitas(numero, clientes(nome))').order('criado_em'),
+    sb.from('visitas').select('*, cliente_id, clientes(nome)').order('criado_em'),
+    sb.from('materiais').select('*, visitas(numero, cliente_id, clientes(nome))').order('criado_em'),
     sb.from('acoes_plano').select('*, clientes(nome)').order('criado_em')
   ])
 
@@ -1423,7 +1489,11 @@ async function renderAdminTables(){
     <tr data-client-id="${v.cliente_id||''}">
       <td><strong>${v.clientes?.nome||'–'}</strong></td><td>${v.numero}</td><td>${v.titulo}</td><td>${v.data_visita}</td>
       <td><span class="badge ${stBadge[v.status]||'b-future'}">${stLabel[v.status]||v.status}</span></td>
-      <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('visita','${v.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('visitas','${v.id}')">🗑</button></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="openImportModal('${v.id}','${v.clientes?.nome||''}','${v.cliente_id||''}','${v.titulo||''}')">📄 Importar PDF</button>
+        <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('visita','${v.id}')">✏️</button>
+        <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('visitas','${v.id}')">🗑</button>
+      </td>
     </tr>`).join('')
   // Re-apply active filter
   filterAdmTable('visitas')
@@ -1650,6 +1720,319 @@ async function saveModal(){
 
 async function editItem(type, id){ await openModal(type, id) }
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('open') }
+
+// ══════════════════════════════════════════════
+//  IMPORTAR PDF — RELATÓRIO DE VISITA
+// ══════════════════════════════════════════════
+let _importVisitaId = null
+let _importClienteId = null
+let _importClienteNome = ''
+let _importVisitaTitulo = ''
+let _importAcoes = []
+
+function openImportModal(visitaId, clienteNome, clienteId, visitaTitulo){
+  _importVisitaId = visitaId
+  _importClienteId = clienteId
+  _importClienteNome = clienteNome
+  _importVisitaTitulo = visitaTitulo
+  _importAcoes = []
+
+  // Reset UI
+  document.getElementById('import-visita-info').innerHTML =
+    `<strong>📅 Visita:</strong> ${visitaTitulo} &nbsp;|&nbsp; <strong>👥 Cliente:</strong> ${clienteNome}`
+  document.getElementById('import-drop-area').style.display = 'block'
+  document.getElementById('import-progress').style.display = 'none'
+  document.getElementById('import-progress-bar').style.width = '0%'
+  document.getElementById('import-status').textContent = ''
+  document.getElementById('import-preview').style.display = 'none'
+  document.getElementById('import-acoes-list').innerHTML = ''
+  document.getElementById('import-file-input').value = ''
+  document.getElementById('import-modal-overlay').classList.add('open')
+}
+
+function closeImportModal(){
+  document.getElementById('import-modal-overlay').classList.remove('open')
+}
+
+function closeImportModalOut(e){
+  if(e.target.id === 'import-modal-overlay') closeImportModal()
+}
+
+function handleImportDrop(e){
+  e.preventDefault()
+  document.getElementById('import-drop-area').classList.remove('drag-over')
+  const file = e.dataTransfer.files[0]
+  if(file && file.type === 'application/pdf') processImportPDF(file)
+  else showToast('Por favor, envie um arquivo PDF.')
+}
+
+async function processImportPDF(file){
+  if(!file) return
+
+  const prog = document.getElementById('import-progress')
+  const bar = document.getElementById('import-progress-bar')
+  const status = document.getElementById('import-status')
+
+  prog.style.display = 'block'
+  bar.style.width = '15%'
+  status.textContent = '⬆️ Enviando PDF para Relatórios de Visita...'
+
+  // 1. Upload PDF to Supabase Storage
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_')
+  const path = `uploads/${Date.now()}_${safeName}`
+  const { data: uploadData, error: uploadError } = await sb.storage.from(BUCKET).upload(path, file, { upsert: true })
+
+  if(uploadError){
+    status.textContent = '❌ Erro ao enviar PDF: ' + uploadError.message
+    return
+  }
+
+  bar.style.width = '35%'
+  status.textContent = '💾 Salvando referência em Relatórios de Visita...'
+
+  // 2. Get public URL and save as material (type 'pdf') linked to the visita
+  const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(path)
+  const pdfUrl = urlData.publicUrl
+
+  await sb.from('materiais').insert({
+    visita_id: _importVisitaId,
+    nome: file.name.replace(/\.pdf$/i,''),
+    tipo: 'pdf',
+    url: pdfUrl
+  })
+
+  bar.style.width = '55%'
+  status.textContent = '🔍 Lendo ações do PDF...'
+
+  // Update pdf badge
+  document.getElementById('import-pdf-name').textContent = file.name
+  document.getElementById('import-drop-area').style.display = 'none'
+
+  // 3. Extract text from PDF using PDF.js
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    let fullText = ''
+
+    for(let i = 1; i <= pdf.numPages; i++){
+      const page = await pdf.getPage(i)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items.map(item => item.str).join(' ')
+      fullText += pageText + '\n'
+    }
+
+    bar.style.width = '80%'
+    status.textContent = '📋 Extraindo plano de ação...'
+
+    // 4. Parse the action table
+    const acoes = extractAcoesFromText(fullText)
+    bar.style.width = '100%'
+
+    if(acoes.length === 0){
+      status.textContent = '⚠️ Nenhuma ação encontrada. Verifique se o PDF tem a seção "Próximos Passos".'
+      document.getElementById('import-preview').style.display = 'block'
+      document.getElementById('import-acoes-list').innerHTML = '<p style="color:var(--mt2);text-align:center;padding:20px">Nenhuma ação foi extraída do PDF.</p>'
+      document.getElementById('import-pdf-badge').style.display = 'flex'
+      return
+    }
+
+    _importAcoes = acoes
+    renderImportPreview(acoes)
+    status.textContent = `✅ ${acoes.length} ação(ões) encontrada(s) — revise e confirme.`
+    document.getElementById('import-preview').style.display = 'block'
+    document.getElementById('import-pdf-badge').style.display = 'flex'
+
+  } catch(err) {
+    status.textContent = '❌ Erro ao ler PDF: ' + err.message
+  }
+
+  setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%' }, 800)
+}
+
+function extractAcoesFromText(text){
+  const acoes = []
+
+  // Normalize text - remove extra spaces
+  const normalized = text.replace(/\s+/g, ' ').trim()
+
+  // Find the "Próximos Passos" section
+  const markers = [
+    'Próximos Passos',
+    'Proximos Passos',
+    'PRÓXIMOS PASSOS',
+    'Plano de Ação',
+    'PLANO DE AÇÃO'
+  ]
+
+  let sectionStart = -1
+  for(const marker of markers){
+    const idx = normalized.indexOf(marker)
+    if(idx !== -1){ sectionStart = idx; break }
+  }
+
+  if(sectionStart === -1) return acoes
+
+  // Get section text (up to "Resultados Esperados" or end)
+  const endMarkers = ['Resultados Esperados', 'RESULTADOS ESPERADOS', 'Conclusão', 'CONCLUSÃO']
+  let sectionEnd = normalized.length
+  for(const marker of endMarkers){
+    const idx = normalized.indexOf(marker, sectionStart)
+    if(idx !== -1 && idx < sectionEnd) sectionEnd = idx
+  }
+
+  const sectionText = normalized.substring(sectionStart, sectionEnd)
+
+  // Strategy: find numbered items (1, 2, 3...) followed by action text
+  // Pattern: number + action text + responsavel + prazo
+  // From the PDF table structure: "1 Avaliar necessidade... Daniela / Lucas Curto prazo Validar..."
+
+  // Split by numbers at start of entries
+  const entryPattern = /\b(\d+)\s+([A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][^0-9]{10,150?})(?=\s*\d+\s+[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ]|$)/g
+
+  // Alternative: look for table rows after header
+  // Header: Etapa Ação Responsável Prazo Observações
+  const headerIdx = sectionText.search(/Etapa|Ação|Responsável/i)
+  const tableText = headerIdx !== -1 ? sectionText.substring(headerIdx) : sectionText
+
+  // Find rows by pattern: number + long text + name(s) + prazo type
+  const prazos = ['Curto prazo', 'Médio prazo', 'Longo prazo', 'Imediato', 'curto prazo', 'médio prazo', 'longo prazo']
+
+  // Split text into chunks around prazo keywords
+  let workText = tableText
+  const prazoPattern = /(Curto prazo|Médio prazo|Longo prazo|Imediato|curto prazo|médio prazo|longo prazo)/gi
+
+  const parts = workText.split(prazoPattern)
+
+  // Process pairs (text before prazo + prazo itself)
+  for(let i = 0; i < parts.length - 1; i += 2){
+    const chunk = parts[i]
+    const prazo = parts[i+1]
+
+    // Clean up chunk - find the action text
+    // Remove leading numbers and "Etapa/Ação" headers
+    const cleaned = chunk
+      .replace(/^.*?(Etapa\s+Ação\s+Responsável.*?)\s*/i, '')
+      .replace(/^\s*\d+\s+/, '')
+      .trim()
+
+    if(!cleaned || cleaned.length < 5) continue
+
+    // Try to split action from responsavel
+    // Common names pattern at end: "Nome / Nome" or "Nome"
+    // Look for slash-separated names near end
+    const respPattern = /([A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+(?:\s*\/\s*[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+)*(?:\s*\/\s*Gestão|\/\s*Equipe)?)\s*$/
+    const respMatch = cleaned.match(respPattern)
+
+    let titulo = cleaned
+    let responsavel = ''
+
+    if(respMatch){
+      responsavel = respMatch[1].trim()
+      titulo = cleaned.substring(0, cleaned.lastIndexOf(responsavel)).trim()
+    }
+
+    // Clean titulo - remove leading number
+    titulo = titulo.replace(/^\d+\s+/, '').trim()
+
+    if(titulo.length > 5){
+      acoes.push({
+        titulo: titulo,
+        responsavel: responsavel || '',
+        prazo: prazo ? prazo.trim() : 'Curto prazo',
+        prioridade: prazo && prazo.toLowerCase().includes('médio') ? 'media' : prazo && prazo.toLowerCase().includes('longo') ? 'baixa' : 'alta'
+      })
+    }
+  }
+
+  // Fallback: if no acoes found with above method, try simpler approach
+  if(acoes.length === 0){
+    const lines = sectionText.split(/\n|\. /)
+    for(const line of lines){
+      const trimmed = line.trim()
+      if(trimmed.length > 15 && trimmed.length < 200 &&
+         !trimmed.match(/^(Etapa|Ação|Responsável|Prazo|Observ|Resultados|Próximos)/i)){
+        const hasPrazo = prazos.some(p => trimmed.toLowerCase().includes(p.toLowerCase()))
+        if(!hasPrazo && /[A-Z]/.test(trimmed[0])){
+          acoes.push({
+            titulo: trimmed,
+            responsavel: '',
+            prazo: 'Curto prazo',
+            prioridade: 'media'
+          })
+        }
+      }
+    }
+  }
+
+  return acoes.slice(0, 20) // max 20 actions
+}
+
+function renderImportPreview(acoes){
+  const html = acoes.map((a, i) => `
+    <div class="import-acao-item">
+      <input type="checkbox" class="import-acao-check" id="chk-${i}" checked>
+      <div class="import-acao-body">
+        <div class="import-acao-titulo">${a.titulo}</div>
+        <div class="import-acao-meta">
+          <input class="import-acao-input" id="resp-${i}" value="${a.responsavel}" placeholder="Responsável">
+          <input class="import-acao-input" id="prazo-${i}" value="${a.prazo}" placeholder="Prazo" style="max-width:130px">
+          <select class="import-acao-input" id="pri-${i}" style="max-width:110px">
+            <option value="alta" ${a.prioridade==='alta'?'selected':''}>🔴 Alta</option>
+            <option value="media" ${a.prioridade==='media'?'selected':''}>🟡 Média</option>
+            <option value="baixa" ${a.prioridade==='baixa'?'selected':''}>🟢 Baixa</option>
+          </select>
+        </div>
+      </div>
+    </div>`).join('')
+  document.getElementById('import-acoes-list').innerHTML = html
+}
+
+async function saveImportedAcoes(){
+  const checked = _importAcoes.filter((_,i) => document.getElementById(`chk-${i}`)?.checked)
+  if(checked.length === 0){ showToast('Selecione pelo menos uma ação!'); return }
+
+  const btn = document.querySelector('#import-preview .adm-btn-primary')
+  btn.disabled = true
+  btn.textContent = 'Salvando...'
+
+  const payload = checked.map((_,i) => {
+    const idx = _importAcoes.indexOf(_)
+    return {
+      cliente_id: _importClienteId,
+      titulo: document.getElementById(`resp-${idx}`) ? _.titulo : _.titulo,
+      responsavel: document.getElementById(`resp-${idx}`)?.value || _.responsavel,
+      prazo: document.getElementById(`prazo-${idx}`)?.value || _.prazo,
+      prioridade: document.getElementById(`pri-${idx}`)?.value || _.prioridade,
+      concluida: false
+    }
+  })
+
+  // Fix: use correct indices
+  const selectedPayload = _importAcoes
+    .map((a, i) => ({ a, i }))
+    .filter(({i}) => document.getElementById(`chk-${i}`)?.checked)
+    .map(({a, i}) => ({
+      cliente_id: _importClienteId,
+      titulo: a.titulo,
+      responsavel: document.getElementById(`resp-${i}`)?.value || a.responsavel,
+      prazo: document.getElementById(`prazo-${i}`)?.value || a.prazo,
+      prioridade: document.getElementById(`pri-${i}`)?.value || a.prioridade,
+      concluida: false
+    }))
+
+  const { error } = await sb.from('acoes_plano').insert(selectedPayload)
+
+  if(error){
+    showToast('❌ Erro ao salvar ações: ' + error.message)
+    btn.disabled = false
+    btn.textContent = '✅ Salvar ações no Plano de Ação'
+    return
+  }
+
+  showToast(`✅ ${selectedPayload.length} ação(ões) adicionadas ao plano de ${_importClienteNome}!`)
+  closeImportModal()
+  await renderAdminTables()
+}
 
 function toggleSecoesWrap(val){
   const wrap = document.getElementById('fm-secoes-wrap')
