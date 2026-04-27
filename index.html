@@ -556,7 +556,23 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
       <!-- RELATÓRIO -->
       <div class="page" id="page-relatorio">
         <div class="stage-head"><div><div class="stage-title">Relatórios de Visita</div><div class="stage-desc" id="rel-banner-desc">Acompanhe todos os relatórios das suas visitas</div></div></div>
-        <div class="risco-grid"><div class="risco-card r-alto"><div class="risco-num">3</div><div class="risco-lbl">Risco Alto</div></div><div class="risco-card r-medio"><div class="risco-num">5</div><div class="risco-lbl">Risco Médio</div></div><div class="risco-card r-baixo"><div class="risco-num">4</div><div class="risco-lbl">Risco Baixo</div></div></div>
+        <div class="sum-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px">
+          <div class="sum-card" style="cursor:default">
+            <div class="sum-lbl">Total de visitas</div>
+            <div class="sum-val" id="rel-card-visitas">–</div>
+            <div class="sum-sub">realizadas</div>
+          </div>
+          <div class="sum-card" style="cursor:default">
+            <div class="sum-lbl">Relatórios disponíveis</div>
+            <div class="sum-val" id="rel-card-docs">–</div>
+            <div class="sum-sub">documentos</div>
+          </div>
+          <div class="sum-card" style="cursor:default">
+            <div class="sum-lbl">Última visita</div>
+            <div class="sum-val" id="rel-card-data" style="font-size:18px">–</div>
+            <div class="sum-sub" id="rel-card-titulo">–</div>
+          </div>
+        </div>
         <div class="mat-lbl">Documentos</div>
         <div id="rel-docs"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
       </div>
@@ -1156,6 +1172,30 @@ function renderDocs(){
   document.getElementById('docs-list').innerHTML = docMats.length  ? makeMatHtml(docMats)  : '<p style="color:var(--mt2)">Nenhum documento disponível.</p>'
   // Also update diagnostico empty state (only shows 'form' type)
   renderDiagnostico()
+  // Update relatorio page cards
+  _updateRelCards()
+}
+
+function _updateRelCards(){
+  // Total visitas
+  var tvEl = document.getElementById('rel-card-visitas')
+  if(tvEl) tvEl.textContent = VISITS.length
+
+  // Total relatórios (pdf materials)
+  var relDocs = MATS.filter(function(m){ return m.tipo === 'pdf' })
+  var tdEl = document.getElementById('rel-card-docs')
+  if(tdEl) tdEl.textContent = relDocs.length
+
+  // Última visita por data
+  var sorted = VISITS.slice().sort(function(a, b){
+    var da = new Date(a.data_visita), db = new Date(b.data_visita)
+    return isNaN(db) - isNaN(da) || db - da
+  })
+  var last = sorted[0]
+  var udEl = document.getElementById('rel-card-data')
+  var utEl = document.getElementById('rel-card-titulo')
+  if(udEl) udEl.textContent = last ? last.data_visita : '–'
+  if(utEl) utEl.textContent = last && last.titulo ? last.titulo.substring(0, 35) + (last.titulo.length > 35 ? '…' : '') : '–'
 }
 
 // ══════════════════════════════════════════════
