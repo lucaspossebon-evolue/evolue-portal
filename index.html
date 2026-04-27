@@ -1029,6 +1029,7 @@ async function loadClientData(){
 function typeTag(t){
   const m = {
     pdf:'<span class="tag tag-rel">📊 PDF</span>',
+    diagnostico:'<span class="tag tag-form">🔍 Diagnóstico</span>',
     video:'<span class="tag tag-vid">▶ Vídeo</span>',
     form:'<span class="tag tag-form">📝 Formulário</span>',
     doc:'<span class="tag tag-doc">📁 Documento</span>',
@@ -1041,6 +1042,7 @@ function typeTag(t){
 function typeIcon(t){
   return {
     pdf:'📊 mi-pdf',
+    diagnostico:'🔍 mi-form',
     video:'▶ mi-vid',
     form:'📝 mi-form',
     doc:'📁 mi-doc',
@@ -1160,7 +1162,7 @@ function renderDocs(){
 //  RENDERIZAR DIAGNÓSTICO (conteúdo estático com materiais dinâmicos)
 // ══════════════════════════════════════════════
 function renderDiagnostico(){
-  renderMateriais('diagnostico-list', ['form'])
+  renderMateriais('diagnostico-list', ['diagnostico', 'form'])
 }
 
 // ══════════════════════════════════════════════
@@ -1517,7 +1519,7 @@ async function renderAdminTables(){
     <tr data-client-id="${m.visitas?.cliente_id||''}">
       <td><strong>${m.visitas?.clientes?.nome||'–'}</strong> · V${m.visitas?.numero||'?'}</td>
       <td>${m.nome}</td>
-      <td>${{pdf:'📊 PDF',video:'▶️ Vídeo',form:'📝 Formulário',doc:'📁 Documento',manual:'📖 Manual',procedimento:'📋 Procedimento',risco:'⚠️ Riscos'}[m.tipo]||m.tipo}</td>
+      <td>${{pdf:'📊 PDF',diagnostico:'🔍 Diagnóstico',video:'▶️ Vídeo',form:'📝 Formulário',doc:'📁 Documento',manual:'📖 Manual',procedimento:'📋 Procedimento',risco:'⚠️ Riscos'}[m.tipo]||m.tipo}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.url&&m.url!=='#'?`<a href="${m.url}" target="_blank" style="color:var(--az2)">${m.url.substring(0,35)}...</a>`:'–'}</td>
       <td style="display:flex;gap:6px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('material','${m.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('materiais','${m.id}')">🗑</button></td>
     </tr>`).join('')
@@ -1568,6 +1570,8 @@ async function openModal(type, editId=null){
   }
 
   const clientOpts = _clientsCache.map(c=>`<option value="${c.id}" ${item.cliente_id===c.id?'selected':''}>${c.nome}</option>`).join('')
+  // For material: pre-filter visits by client if editing
+  const matClientId = item.visitas?.cliente_id || ''
   const visitOpts  = _visitsCache.map(v=>`<option value="${v.id}" ${item.visita_id===v.id?'selected':''}>${v.clientes?.nome||'–'} · V${v.numero} — ${v.titulo.substring(0,30)}</option>`).join('')
 
   const bodies = {
@@ -1655,10 +1659,15 @@ async function openModal(type, editId=null){
         <div id="pdf-acoes-list"></div>
       </div>`,
     material:`
+      <div class="fm-group"><label class="fm-label">Cliente</label><select class="fm-select" id="fm-mat-client" onchange="filterVisitsByClient(this.value)">
+        <option value="">— Selecione o cliente —</option>
+        ${clientOpts}
+      </select></div>
       <div class="fm-group"><label class="fm-label">Visita</label><select class="fm-select" id="fm-visit">${visitOpts}</select></div>
       <div class="fm-group"><label class="fm-label">Nome do material</label><input class="fm-input" id="fm-mnom" value="${item.nome||''}"></div>
       <div class="fm-group"><label class="fm-label">Tipo / Seção</label><select class="fm-select" id="fm-tipo">
         <option value="pdf" ${item.tipo==='pdf'?'selected':''}>📊 PDF / Relatório de Visita</option>
+        <option value="diagnostico" ${item.tipo==='diagnostico'?'selected':''}>🔍 Diagnóstico</option>
         <option value="video" ${item.tipo==='video'?'selected':''}>▶ Vídeo (Gravação)</option>
         <option value="form" ${item.tipo==='form'?'selected':''}>📝 Formulário / Teste e Pesquisa</option>
         <option value="doc" ${item.tipo==='doc'?'selected':''}>📁 Documento geral</option>
@@ -1707,6 +1716,15 @@ async function openModal(type, editId=null){
   }
   document.getElementById('modal-body').innerHTML = bodies[type]
   document.getElementById('modal-overlay').classList.add('open')
+
+  // If material modal: pre-select client and filter visits
+  if(type === 'material'){
+    var matClientSel = document.getElementById('fm-mat-client')
+    if(matClientSel && matClientId){
+      matClientSel.value = matClientId
+      filterVisitsByClient(matClientId)
+    }
+  }
 }
 
 async function saveModal(){
@@ -2287,6 +2305,29 @@ async function saveImportedAcoes(){
 function toggleSecoesWrap(val){
   const wrap = document.getElementById('fm-secoes-wrap')
   if(wrap) wrap.style.display = val === 'personalizado' ? 'block' : 'none'
+}
+
+function filterVisitsByClient(clientId){
+  const visitSel = document.getElementById('fm-visit')
+  if(!visitSel) return
+  const opts = visitSel.querySelectorAll('option')
+  opts.forEach(opt => {
+    if(!opt.value){ opt.style.display = ''; return }
+    const visit = _visitsCache.find(v => v.id === opt.value)
+    if(!clientId){
+      opt.style.display = ''
+    } else {
+      opt.style.display = (visit && visit.cliente_id === clientId) ? '' : 'none'
+    }
+  })
+  // Reset selection if current selection is hidden
+  const cur = visitSel.value
+  const curVisit = _visitsCache.find(v => v.id === cur)
+  if(clientId && curVisit && curVisit.cliente_id !== clientId){
+    // Select first visible option
+    const firstVisible = [...opts].find(o => o.style.display !== 'none' && o.value)
+    visitSel.value = firstVisible ? firstVisible.value : ''
+  }
 }
 function closeModalOut(e){ if(e.target.id==='modal-overlay') closeModal() }
 
