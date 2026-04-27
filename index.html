@@ -1565,13 +1565,16 @@ async function openModal(type, editId=null){
   let item = {}
   if(editId){
     const tbl = {cliente:'clientes',visita:'visitas',material:'materiais',acao:'acoes_plano'}[type]
-    const { data } = await sb.from(tbl).select('*').eq('id', editId).single()
+    let matQuery = tbl === 'materiais'
+      ? sb.from(tbl).select('*, visitas(id, cliente_id, numero, clientes(nome))').eq('id', editId).single()
+      : sb.from(tbl).select('*').eq('id', editId).single()
+    const { data } = await matQuery
     item = data || {}
   }
 
   const clientOpts = _clientsCache.map(c=>`<option value="${c.id}" ${item.cliente_id===c.id?'selected':''}>${c.nome}</option>`).join('')
   // For material: pre-filter visits by client if editing
-  const matClientId = item.visitas?.cliente_id || ''
+  const matClientId = item.visitas?.cliente_id || item.cliente_id || ''
   const visitOpts  = _visitsCache.map(v=>`<option value="${v.id}" ${item.visita_id===v.id?'selected':''}>${v.clientes?.nome||'–'} · V${v.numero} — ${v.titulo.substring(0,30)}</option>`).join('')
 
   const bodies = {
@@ -1720,9 +1723,15 @@ async function openModal(type, editId=null){
   // If material modal: pre-select client and filter visits
   if(type === 'material'){
     var matClientSel = document.getElementById('fm-mat-client')
-    if(matClientSel && matClientId){
-      matClientSel.value = matClientId
-      filterVisitsByClient(matClientId)
+    if(matClientSel){
+      if(matClientId){
+        // Try to set value - find matching option by string comparison
+        var opts = matClientSel.querySelectorAll('option')
+        opts.forEach(function(o){
+          if(String(o.value) === String(matClientId)) o.selected = true
+        })
+        filterVisitsByClient(String(matClientId))
+      }
     }
   }
 }
@@ -2313,18 +2322,17 @@ function filterVisitsByClient(clientId){
   const opts = visitSel.querySelectorAll('option')
   opts.forEach(opt => {
     if(!opt.value){ opt.style.display = ''; return }
-    const visit = _visitsCache.find(v => v.id === opt.value)
+    const visit = _visitsCache.find(v => String(v.id) === String(opt.value))
     if(!clientId){
       opt.style.display = ''
     } else {
-      opt.style.display = (visit && visit.cliente_id === clientId) ? '' : 'none'
+      opt.style.display = (visit && String(visit.cliente_id) === String(clientId)) ? '' : 'none'
     }
   })
   // Reset selection if current selection is hidden
   const cur = visitSel.value
-  const curVisit = _visitsCache.find(v => v.id === cur)
-  if(clientId && curVisit && curVisit.cliente_id !== clientId){
-    // Select first visible option
+  const curVisit = _visitsCache.find(v => String(v.id) === String(cur))
+  if(clientId && curVisit && String(curVisit.cliente_id) !== String(clientId)){
     const firstVisible = [...opts].find(o => o.style.display !== 'none' && o.value)
     visitSel.value = firstVisible ? firstVisible.value : ''
   }
