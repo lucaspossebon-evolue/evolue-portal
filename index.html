@@ -710,6 +710,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
       <div class="adm-nav-item" onclick="admPage('visitas',this)">📅 Visitas</div>
       <div class="adm-nav-item" onclick="admPage('materiais',this)">📁 Materiais</div>
       <div class="adm-nav-item" onclick="admPage('acoes',this)">🧭 Plano de Ação</div>
+      <div class="adm-nav-item" onclick="admPage('objetivos',this)">🎯 Objetivos / Diagnóstico</div>
       <div class="adm-nav-item" onclick="admPage('biblioteca',this)">🗂️ Biblioteca de Arquivos</div>
     </div>
     <div class="adm-content">
@@ -761,6 +762,31 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
         <div class="adm-add-bar"><button class="adm-btn adm-btn-primary" onclick="openModal('acao')">+ Nova ação</button></div>
         <div class="adm-table-wrap"><table class="adm-table"><thead><tr><th>Cliente</th><th>Ação</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbl-acoes"></tbody></table></div>
       </div>
+      <div class="adm-page" id="adm-objetivos">
+        <div class="adm-section-title">🎯 Objetivos / Diagnóstico</div>
+        <div class="adm-section-desc">Defina os objetivos estratégicos de cada cliente. Eles aparecem na aba Diagnóstico do portal e podem ser vinculados a ações do Plano de Ação.</div>
+        <div class="adm-filter-bar" style="margin-top:16px">
+          <span class="adm-filter-lbl">👥 Cliente</span>
+          <select class="adm-filter-select" id="obj-cliente-sel" onchange="loadObjetivos()">
+            <option value="">— Selecione um cliente —</option>
+          </select>
+        </div>
+        <div id="obj-form-wrap" style="display:none;margin-top:16px;background:var(--azp);border:1px solid var(--azp2);border-radius:var(--r);padding:16px 20px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--az2);margin-bottom:10px">Novo objetivo</div>
+          <div style="display:flex;gap:10px;align-items:flex-end">
+            <div style="flex:1">
+              <label class="fm-label">Título do objetivo</label>
+              <input class="fm-input" id="obj-titulo-input" placeholder="Ex: Organização e Definição de papéis">
+            </div>
+            <button class="adm-btn adm-btn-primary" style="flex-shrink:0;height:42px" onclick="saveObjetivo()">+ Adicionar</button>
+          </div>
+        </div>
+        <div id="obj-list-wrap" style="display:none;margin-top:18px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--mt2);margin-bottom:10px">Objetivos cadastrados</div>
+          <div id="obj-list"></div>
+        </div>
+      </div>
+
       <div class="adm-page" id="adm-biblioteca">
         <div class="adm-section-title">🗂️ Biblioteca de Arquivos</div>
         <div class="adm-section-desc">Todos os arquivos enviados para o Supabase Storage.</div>
@@ -856,6 +882,23 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 const SUPABASE_URL = 'https://przkuyghvvkigqghsusl.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByemt1eWdodnZraWdxZ2hzdXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxODM0MDQsImV4cCI6MjA5Mjc1OTQwNH0.nlbhZKYw2jlF9_-ZPQ3qKJY7gVv0Er-drEIJRcQ9_2I'
 const ADMIN_PASS   = 'admin123'
+
+// ══ SQL NECESSÁRIO NO SUPABASE ══════════════════
+// Execute no SQL Editor do Supabase:
+//
+// CREATE TABLE IF NOT EXISTS objetivos_diagnostico (
+//   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+//   cliente_id uuid REFERENCES clientes(id) ON DELETE CASCADE,
+//   titulo text NOT NULL,
+//   ordem integer DEFAULT 1,
+//   criado_em timestamptz DEFAULT now()
+// );
+// ALTER TABLE objetivos_diagnostico ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "public read" ON objetivos_diagnostico FOR SELECT USING (true);
+// CREATE POLICY "public write" ON objetivos_diagnostico FOR ALL USING (true);
+//
+// ALTER TABLE acoes_plano ADD COLUMN IF NOT EXISTS objetivo_id uuid REFERENCES objetivos_diagnostico(id) ON DELETE SET NULL;
+// ════════════════════════════════════════════════
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -1059,13 +1102,15 @@ document.addEventListener('keydown', e => { if(e.key === 'Enter' && document.get
 //  CARREGAR DADOS DO CLIENTE
 // ══════════════════════════════════════════════
 async function loadClientData(){
-  const [visRes, matRes, acRes] = await Promise.all([
+  const [visRes, matRes, acRes, objRes] = await Promise.all([
     sb.from('visitas').select('*').eq('cliente_id', CUR.id).order('criado_em'),
     sb.from('materiais').select('*, visitas(cliente_id)').eq('visitas.cliente_id', CUR.id),
-    sb.from('acoes_plano').select('*').eq('cliente_id', CUR.id).order('criado_em')
+    sb.from('acoes_plano').select('*').eq('cliente_id', CUR.id).order('criado_em'),
+    sb.from('objetivos_diagnostico').select('*').eq('cliente_id', CUR.id).order('ordem')
   ])
   VISITS = visRes.data || []
   ACOES  = acRes.data  || []
+  window._objCache = objRes.data || []
 
   // Pegar materiais das visitas deste cliente
   const vids = VISITS.map(v => v.id)
@@ -1186,15 +1231,23 @@ function renderPlano(){
   document.getElementById('fa-open').textContent = `Em aberto (${open})`
 
   const priCls = {alta:'pa',media:'pm',baixa:'pb'}
-  const html = ACOES.map(a => `
+  const objMap = {}
+  ;(window._objCache||[]).forEach(o => { objMap[o.id] = o.titulo })
+
+  const html = ACOES.map(a => {
+    const objTag = a.objetivo_id && objMap[a.objetivo_id]
+      ? `<div style="font-size:10px;font-weight:700;color:var(--az3);background:var(--azp);border:1px solid var(--azp2);border-radius:20px;padding:2px 9px;display:inline-block;margin-bottom:3px">🎯 ${objMap[a.objetivo_id]}</div>`
+      : ''
+    return `
     <div class="acao-item" data-done="${a.concluida}" data-id="${a.id}">
       <div class="acao-chk ${a.concluida?'done':''}" onclick="togAcao(this)">${a.concluida?'✓':''}</div>
       <div class="acao-body">
+        ${objTag}
         <div class="acao-title">${a.titulo}</div>
         <div class="acao-meta">${a.responsavel||'–'} · ${a.prazo||'–'}</div>
       </div>
       <span class="acao-pri ${priCls[a.prioridade]||'pm'}">${a.prioridade||'Média'}</span>
-    </div>`).join('')
+    </div>`}).join('')
   document.getElementById('acoes-list').innerHTML = html || '<p style="color:var(--mt2);padding:20px">Nenhuma ação cadastrada.</p>'
 }
 
@@ -1303,7 +1356,35 @@ function filtRelYear(yr){
 //  RENDERIZAR DIAGNÓSTICO (conteúdo estático com materiais dinâmicos)
 // ══════════════════════════════════════════════
 function renderDiagnostico(){
-  renderMateriais('diagnostico-list', ['diagnostico', 'form'])
+  const objs = window._objCache || []
+  const colors = ['--az1','--az2','--az3']
+  let objHtml = ''
+  if(objs.length > 0){
+    objHtml = `<div style="margin-bottom:20px">
+      <div class="mat-lbl">🎯 Objetivos Estratégicos</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:10px">
+        ${objs.map((o,i)=>`
+          <div style="background:var(--br);border:1px solid var(--bd2);border-left:4px solid var(--az${(i%3)+1});border-radius:var(--rsm);padding:14px 16px;box-shadow:var(--sh)">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--mt2);margin-bottom:4px">Objetivo ${i+1}</div>
+            <div style="font-size:13.5px;font-weight:700;color:var(--az1);line-height:1.4">${o.titulo}</div>
+          </div>`).join('')}
+      </div>
+    </div>`
+  }
+  const container = document.getElementById('diagnostico-list')
+  // Render objetivos + materiais
+  const mats = MATS.filter(m => ['diagnostico','form'].includes(m.tipo))
+  const matHtml = mats.length > 0 ? `<div class="mat-lbl" style="margin-top:${objs.length?'8px':'0'}">📁 Materiais do Diagnóstico</div>` + mats.map(m=>{
+    const [ico, cls] = typeIcon(m.tipo).split(' ')
+    const clickable = m.url && m.url !== '#' ? `onclick="window.open('${m.url}','_blank')" style="cursor:pointer"` : ''
+    return `<div class="mat-item" ${clickable}>
+      <div class="mat-icon ${cls}">${ico}</div>
+      <div class="mat-info"><div class="mat-name">${m.nome}</div><div class="mat-meta">${m.tipo.toUpperCase()}${m.url&&m.url!=='#'?' · clique para abrir':''}</div></div>
+      ${matAction(m.url)}
+    </div>`
+  }).join('') : ''
+  container.innerHTML = (objHtml || '') + (matHtml || '')
+  if(!objHtml && !matHtml) container.innerHTML = '<p style="color:var(--mt2)">Nenhum diagnóstico disponível.</p>'
 }
 
 // ══════════════════════════════════════════════
@@ -1550,6 +1631,7 @@ function admPage(id,el){
   document.querySelectorAll('.adm-nav-item').forEach(n=>n.classList.remove('active'))
   el.classList.add('active')
   if(id === 'biblioteca') loadAdmBiblioteca()
+  if(id === 'objetivos') initObjetivosTab()
 }
 
 // ══════════════════════════════════════════════
@@ -1846,7 +1928,8 @@ async function openModal(type, editId=null){
         <input type="hidden" id="fm-url-hidden" value="${item.url&&item.url!=='#'?item.url:''}">
       </div>`,
     acao:`
-      <div class="fm-group"><label class="fm-label">Cliente</label><select class="fm-select" id="fm-aclient">${clientOpts}</select></div>
+      <div class="fm-group"><label class="fm-label">Cliente</label><select class="fm-select" id="fm-aclient" onchange="loadObjetivosSelect(this.value,'fm-aobj')">${clientOpts}</select></div>
+      <div class="fm-group"><label class="fm-label">🎯 Objetivo Geral</label><select class="fm-select" id="fm-aobj"><option value="">— Carregando objetivos… —</option></select></div>
       <div class="fm-group"><label class="fm-label">Título da ação</label><input class="fm-input" id="fm-atitulo" value="${item.titulo||''}"></div>
       <div class="fm-row">
         <div class="fm-group"><label class="fm-label">Responsável</label><input class="fm-input" id="fm-aresp" value="${item.responsavel||''}"></div>
@@ -1866,7 +1949,6 @@ async function openModal(type, editId=null){
     var matClientSel = document.getElementById('fm-mat-client')
     if(matClientSel){
       if(matClientId){
-        // Try to set value - find matching option by string comparison
         var opts = matClientSel.querySelectorAll('option')
         opts.forEach(function(o){
           if(String(o.value) === String(matClientId)) o.selected = true
@@ -1874,6 +1956,11 @@ async function openModal(type, editId=null){
         filterVisitsByClient(String(matClientId))
       }
     }
+  }
+  // If acao modal: load objetivos for selected client
+  if(type === 'acao'){
+    const clientId = item.cliente_id || (clients[0] && clients[0].id) || ''
+    await loadObjetivosSelect(clientId, 'fm-aobj', item.objetivo_id)
   }
 }
 
@@ -1907,7 +1994,8 @@ async function saveModal(){
     if(!payload.nome){ showToast('Informe o nome!'); return; }
   } else if(_modalMode === 'acao'){
     table = 'acoes_plano'
-    payload = { cliente_id: document.getElementById('fm-aclient').value, titulo: document.getElementById('fm-atitulo').value.trim(), responsavel: document.getElementById('fm-aresp').value.trim(), prazo: document.getElementById('fm-aprazo').value.trim(), prioridade: document.getElementById('fm-apri').value, concluida: false }
+    const objVal = document.getElementById('fm-aobj')?.value || null
+    payload = { cliente_id: document.getElementById('fm-aclient').value, objetivo_id: objVal || null, titulo: document.getElementById('fm-atitulo').value.trim(), responsavel: document.getElementById('fm-aresp').value.trim(), prazo: document.getElementById('fm-aprazo').value.trim(), prioridade: document.getElementById('fm-apri').value, concluida: false }
     if(!payload.titulo){ showToast('Informe o título!'); return; }
   }
 
@@ -2061,11 +2149,21 @@ function _extractAcoes(text){
 }
 
 function _renderAcoesPreview(acoes){
+  var objOpts = (window._objCache||[]).map(function(o){
+    return '<option value="'+o.id+'">'+o.titulo+'</option>'
+  }).join('')
+  var objSel = objOpts
+    ? '<select class="pdf-acao-input" id="pobj-'+0+'" style="width:100%;margin-bottom:6px"><option value="">— Objetivo Geral (opcional) —</option>'+objOpts+'</select>'
+    : ''
   var html = acoes.map(function(a, i){
+    var objSelI = objOpts
+      ? '<select class="pdf-acao-input" id="pobj-'+i+'" style="width:100%;margin-bottom:6px"><option value="">— Objetivo Geral (opcional) —</option>'+objOpts+'</select>'
+      : ''
     return '<div class="pdf-acao-item" id="pai-' + i + '">' +
       '<input type="checkbox" class="pdf-acao-chk" id="pc-' + i + '" checked onchange="_toggleAcaoItem(' + i + ',this.checked)">' +
       '<div class="pdf-acao-body">' +
         '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--mt2);margin-bottom:4px">Ação ' + (i+1) + '</div>' +
+        objSelI +
         '<textarea class="pdf-acao-input" id="pt-' + i + '" rows="2" style="width:100%;resize:vertical;margin-bottom:6px;padding:6px 8px;font-size:13px;line-height:1.5">' + a.titulo + '</textarea>' +
         '<div class="pdf-acao-fields">' +
           '<input class="pdf-acao-input" id="pr-' + i + '" value="' + a.responsavel + '" placeholder="Responsável">' +
@@ -2120,6 +2218,7 @@ async function _savePdfAndAcoes(visitaId, clienteId){
         if(!titulo) continue
         toSave.push({
           cliente_id: clienteId,
+          objetivo_id: (document.getElementById('pobj-' + i)?.value) || null,
           titulo: titulo,
           responsavel: respEl ? respEl.value.trim() : _pdfAcoes[i].responsavel,
           prazo: prazoEl ? prazoEl.value.trim() : _pdfAcoes[i].prazo,
@@ -2152,6 +2251,11 @@ function openImportModal(visitaId, clienteNome, clienteId, visitaTitulo){
   _importClienteNome = clienteNome
   _importVisitaTitulo = visitaTitulo
   _importAcoes = []
+  window._objCache = []
+  // Pre-load objetivos for this client
+  sb.from('objetivos_diagnostico').select('*').eq('cliente_id', clienteId).order('ordem').then(function(r){
+    window._objCache = r.data || []
+  })
 
   // Reset UI
   document.getElementById('import-visita-info').innerHTML =
@@ -2384,11 +2488,16 @@ function extractAcoesFromText(text){
 }
 
 function renderImportPreview(acoes){
+  const objOpts = (window._objCache||[]).map(o=>`<option value="${o.id}">${o.titulo}</option>`).join('')
+  const objSelHtml = objOpts
+    ? `<select class="import-acao-input" id="obj-IDX" style="width:100%;margin-bottom:4px"><option value="">— Objetivo Geral (opcional) —</option>${objOpts}</select>`
+    : ''
   const html = acoes.map((a, i) => `
     <div class="import-acao-item">
       <input type="checkbox" class="import-acao-check" id="chk-${i}" checked>
       <div class="import-acao-body">
         <div class="import-acao-titulo">${a.titulo}</div>
+        ${objSelHtml.replace('IDX', i)}
         <div class="import-acao-meta">
           <input class="import-acao-input" id="resp-${i}" value="${a.responsavel}" placeholder="Responsável">
           <input class="import-acao-input" id="prazo-${i}" value="${a.prazo}" placeholder="Prazo" style="max-width:130px">
@@ -2429,6 +2538,7 @@ async function saveImportedAcoes(){
     .filter(({i}) => document.getElementById(`chk-${i}`)?.checked)
     .map(({a, i}) => ({
       cliente_id: _importClienteId,
+      objetivo_id: document.getElementById(`obj-${i}`)?.value || null,
       titulo: a.titulo,
       responsavel: document.getElementById(`resp-${i}`)?.value || a.responsavel,
       prazo: document.getElementById(`prazo-${i}`)?.value || a.prazo,
@@ -2637,6 +2747,97 @@ async function bibUploadFile(input){
   if(error){ showToast('❌ Erro: ' + error.message) }
   else { showToast('✅ Arquivo enviado para a biblioteca!'); loadAdmBiblioteca() }
   setTimeout(() => { prog.style.display='none'; bar.style.width='0%'; input.value=''; }, 1200)
+}
+
+// ══════════════════════════════════════════════
+//  OBJETIVOS / DIAGNÓSTICO
+// ══════════════════════════════════════════════
+
+async function initObjetivosTab(){
+  const { data: clients } = await sb.from('clientes').select('id,nome').order('nome')
+  const sel = document.getElementById('obj-cliente-sel')
+  if(!sel) return
+  const cur = sel.value
+  sel.innerHTML = '<option value="">— Selecione um cliente —</option>' +
+    (clients||[]).map(c=>`<option value="${c.id}" ${cur===c.id?'selected':''}>${c.nome}</option>`).join('')
+  if(cur) loadObjetivos()
+}
+
+async function loadObjetivos(){
+  const clientId = document.getElementById('obj-cliente-sel')?.value
+  const formWrap = document.getElementById('obj-form-wrap')
+  const listWrap = document.getElementById('obj-list-wrap')
+  if(!clientId){ if(formWrap) formWrap.style.display='none'; if(listWrap) listWrap.style.display='none'; return }
+  if(formWrap) formWrap.style.display='block'
+  if(listWrap) listWrap.style.display='block'
+
+  const { data } = await sb.from('objetivos_diagnostico').select('*').eq('cliente_id', clientId).order('ordem')
+  const objs = data || []
+  const list = document.getElementById('obj-list')
+  if(!list) return
+  if(!objs.length){
+    list.innerHTML = '<p style="color:var(--mt2);font-size:13px">Nenhum objetivo cadastrado. Adicione o primeiro acima.</p>'
+    return
+  }
+  list.innerHTML = objs.map((o,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--br);border:1px solid var(--bd2);border-left:4px solid var(--az${(i%3)+1});border-radius:var(--rsm);margin-bottom:8px;box-shadow:var(--sh)">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--azp);color:var(--az1);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+      <div id="obj-txt-${o.id}" style="flex:1;font-size:13.5px;font-weight:600;color:var(--tx)">${o.titulo}</div>
+      <input id="obj-edit-${o.id}" class="fm-input" style="display:none;flex:1;font-size:13px" value="${o.titulo}">
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="adm-btn adm-btn-ghost adm-btn-sm" id="obj-btn-edit-${o.id}" onclick="startEditObj('${o.id}')">✏️</button>
+        <button class="adm-btn adm-btn-primary adm-btn-sm" id="obj-btn-save-${o.id}" style="display:none" onclick="saveEditObj('${o.id}')">✓</button>
+        <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteObjetivo('${o.id}')">🗑</button>
+      </div>
+    </div>`).join('')
+}
+
+function startEditObj(id){
+  document.getElementById('obj-txt-'+id).style.display = 'none'
+  document.getElementById('obj-edit-'+id).style.display = 'block'
+  document.getElementById('obj-btn-edit-'+id).style.display = 'none'
+  document.getElementById('obj-btn-save-'+id).style.display = 'block'
+  document.getElementById('obj-edit-'+id).focus()
+}
+
+async function saveEditObj(id){
+  const val = document.getElementById('obj-edit-'+id)?.value.trim()
+  if(!val){ showToast('Informe o título!'); return }
+  await sb.from('objetivos_diagnostico').update({ titulo: val }).eq('id', id)
+  showToast('✅ Objetivo atualizado!')
+  loadObjetivos()
+}
+
+async function saveObjetivo(){
+  const clientId = document.getElementById('obj-cliente-sel')?.value
+  const titulo = document.getElementById('obj-titulo-input')?.value.trim()
+  if(!clientId){ showToast('Selecione um cliente!'); return }
+  if(!titulo){ showToast('Informe o título do objetivo!'); return }
+  // Get current max ordem
+  const { data: existing } = await sb.from('objetivos_diagnostico').select('ordem').eq('cliente_id', clientId).order('ordem',{ascending:false}).limit(1)
+  const ordem = existing && existing[0] ? (existing[0].ordem + 1) : 1
+  const { error } = await sb.from('objetivos_diagnostico').insert({ cliente_id: clientId, titulo, ordem })
+  if(error){ showToast('❌ Erro: ' + error.message); return }
+  document.getElementById('obj-titulo-input').value = ''
+  showToast('✅ Objetivo adicionado!')
+  loadObjetivos()
+}
+
+async function deleteObjetivo(id){
+  if(!confirm('Remover este objetivo?')) return
+  await sb.from('objetivos_diagnostico').delete().eq('id', id)
+  showToast('✅ Objetivo removido!')
+  loadObjetivos()
+}
+
+async function loadObjetivosSelect(clientId, selectId, selectedId=null){
+  const sel = document.getElementById(selectId)
+  if(!sel) return
+  if(!clientId){ sel.innerHTML = '<option value="">— Selecione um cliente primeiro —</option>'; return }
+  const { data } = await sb.from('objetivos_diagnostico').select('*').eq('cliente_id', clientId).order('ordem')
+  const objs = data || []
+  sel.innerHTML = '<option value="">— Objetivo Geral (opcional) —</option>' +
+    objs.map(o=>`<option value="${o.id}" ${selectedId&&String(selectedId)===String(o.id)?'selected':''}>${o.titulo}</option>`).join('')
 }
 
 // ── PATCH admPage to load biblioteca ──────────
