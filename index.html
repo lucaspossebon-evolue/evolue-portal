@@ -1845,79 +1845,77 @@ function onPdfSelect(file){
 function _extractAcoes(text){
   var acoes = []
   var norm = text.replace(/\s+/g, ' ').trim()
-  // Also handle "Próxima visita" as prazo
 
-
-  // Find the Proximos Passos section
-  var starts = ['Próximos Passos', 'Proximos Passos', 'PRÓXIMOS PASSOS', 'Plano de Ação']
+  // 1. Find "Próximos Passos" section
   var secStart = -1
-  for(var s of starts){
-    var idx = norm.indexOf(s)
-    if(idx !== -1){ secStart = idx; break }
+  for(var st of ['Próximos Passos', 'Proximos Passos', 'PRÓXIMOS PASSOS']){
+    var si = norm.indexOf(st)
+    if(si !== -1){ secStart = si; break }
   }
   if(secStart === -1) return acoes
 
-  // Find end of section
-  var ends = ['Resultados Esperados', 'RESULTADOS ESPERADOS', 'Conclusão', 'CONCLUSÃO']
+  // 2. Find end of section
   var secEnd = norm.length
-  for(var e of ends){
-    var ei = norm.indexOf(e, secStart)
+  for(var em of ['Resultados Esperados', 'RESULTADOS ESPERADOS', 'Conclusão']){
+    var ei = norm.indexOf(em, secStart + 20)
     if(ei !== -1 && ei < secEnd) secEnd = ei
   }
-
   var section = norm.substring(secStart, secEnd)
 
-  // Split by prazo keywords to find table rows
-  var prazos = ['Curto prazo', 'Médio prazo', 'Longo prazo', 'Imediato',
-                'curto prazo', 'médio prazo', 'longo prazo', 'imediato']
-  
-  var prazoRx = /Próxima visita|Próximo mês|Curto prazo|Médio prazo|Longo prazo|Imediato|proxima visita|próxima visita|curto prazo|médio prazo|longo prazo|imediato/gi
-  var parts = section.split(prazoRx)
-  var matches = section.match(prazoRx) || []
+  // 3. Remove all headers (section title + table header rows that repeat on each page)
+  section = section
+    .replace(/\d+\.\s*Próximos Passos\s*[–-]\s*Plano de Ação/gi, '')
+    .replace(/Próximos Passos\s*[–-]\s*Plano de Ação/gi, '')
+    .replace(/Próximos Passos/gi, '')
+    .replace(/Etapa\s+Ação\s+Responsável\s+Prazo\s+Observações/gi, '')
+    .replace(/Etapa\s+Ação\s+Responsável\s+Prazo/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 
-  for(var i = 0; i < matches.length; i++){
-    var chunk = parts[i] || ''
-    var prazo = matches[i] || 'Curto prazo'
+  // 4. Split by row number pattern: "digit(s) UppercaseLetter"
+  // This produces: ['', '1', 'text1', '2', 'text2', ...]
+  var parts = section.split(/((?<!\d)(?<!\.)\d{1,2})\s+(?=[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ])/g)
 
-    // The part AFTER prazo (parts[i+1]) contains the Observação + next action
-    // We ignore it completely — only work with chunk BEFORE the prazo keyword
+  // Text chunks are at indices 2, 4, 6... (after empty string and number)
+  var chunks = []
+  for(var i = 2; i < parts.length; i += 2){
+    if(parts[i] && parts[i].trim().length > 5) chunks.push(parts[i].trim())
+  }
 
-    // Clean chunk - remove table headers and leading numbers
-    chunk = chunk
-      .replace(/Etapa\s+Ação\s+Responsável\s+Prazo\s+Observações/gi, '')
-      .replace(/Etapa\s+Ação\s+Responsável/gi, '')
-      .replace(/^\s*\d+\s+/, '')
-      .trim()
+  // 5. Parse each chunk: "[acao] [responsavel] [prazo] [observacao_ignored]"
+  var prazoRx = /\b(Próxima visita|Próximo mês|Curto prazo|Médio prazo|Longo prazo|Imediato|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro|Janeiro|Fevereiro|Março)\b/gi
 
-    if(chunk.length < 5) continue
+  for(var c = 0; c < chunks.length; c++){
+    var chunk = chunks[c]
+    prazoRx.lastIndex = 0
+    var pm = prazoRx.exec(chunk)
+    if(!pm) continue
 
-    // The chunk contains: [action text] [responsavel]
-    // Responsavel is typically at the end: "Nome / Nome" or "Nome"
-    // Pattern: one or more capitalized words, possibly with "/" separator
-    var respRx = /\s([A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+(?:\s*[\/]\s*[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+)*(?:\s*[\/]\s*(?:Gestão|Equipe|Gestores|Karla|Lucas|Grasiela|Daniela|João|Milton|Equipe))*)\s*$/
-    var respMatch = chunk.match(respRx)
-    var titulo = chunk
+    var prazo = pm[1]
+    var before = chunk.substring(0, pm.index).trim()
+    // Everything AFTER prazo is observação — ignored completely
+
+    // Extract responsavel from end of before
+    var nameRx = /\s+((?:[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+)(?:\s*\/\s*(?:[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][a-záéíóúàâêîôûãõç]+))*)\s*$/
+    var nm = before.match(nameRx)
     var responsavel = ''
+    var titulo = before
 
-    if(respMatch && respMatch[1] && respMatch[1].length < 50){
-      responsavel = respMatch[1].trim()
-      var lastIdx = chunk.lastIndexOf(responsavel)
-      if(lastIdx > 5) titulo = chunk.substring(0, lastIdx).trim()
+    if(nm && nm[1] && nm[1].length >= 2 && nm[1].length <= 60){
+      responsavel = nm[1].trim()
+      titulo = before.substring(0, before.lastIndexOf(responsavel)).trim()
     }
 
-    // Final cleanup of titulo
-    titulo = titulo
-      .replace(/^\d+\s+/, '')
-      .replace(/\s+/g, ' ')
-      .trim()
+    titulo = titulo.replace(/\s+/g, ' ').trim()
 
     if(titulo.length > 5){
-      var prazoLow = prazo.toLowerCase()
-      var pri = prazoLow.includes('médio') || prazoLow.includes('medio') ? 'media'
-              : prazoLow.includes('longo') ? 'baixa' : 'alta'
+      var pl = prazo.toLowerCase()
+      var pri = (pl.includes('médio') || pl.includes('medio')) ? 'media'
+              : pl.includes('longo') ? 'baixa' : 'alta'
       acoes.push({ titulo: titulo, responsavel: responsavel, prazo: prazo, prioridade: pri })
     }
   }
+
   return acoes.slice(0, 20)
 }
 
