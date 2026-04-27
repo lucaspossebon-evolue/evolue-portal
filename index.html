@@ -573,7 +573,12 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
             <div class="sum-sub" id="rel-card-titulo">–</div>
           </div>
         </div>
-        <div class="mat-lbl">Documentos</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="mat-lbl" style="margin:0">Documentos</div>
+          <select id="rel-year-sel" class="fm-select" style="width:auto;min-width:100px;padding:6px 12px;font-size:13px" onchange="filtRelYear(this.value)">
+            <option value="">Todos</option>
+          </select>
+        </div>
         <div id="rel-docs"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
       </div>
 
@@ -1177,25 +1182,58 @@ function renderDocs(){
 }
 
 function _updateRelCards(){
-  // Total visitas
-  var tvEl = document.getElementById('rel-card-visitas')
-  if(tvEl) tvEl.textContent = VISITS.length
-
-  // Total relatórios (pdf materials)
-  var relDocs = MATS.filter(function(m){ return m.tipo === 'pdf' })
-  var tdEl = document.getElementById('rel-card-docs')
-  if(tdEl) tdEl.textContent = relDocs.length
-
-  // Última visita por data
-  var sorted = VISITS.slice().sort(function(a, b){
-    var da = new Date(a.data_visita), db = new Date(b.data_visita)
-    return isNaN(db) - isNaN(da) || db - da
+  // Build pdf list enriched with visit date, sorted newest first
+  var relList = MATS.filter(function(m){ return m.tipo === 'pdf' }).map(function(m){
+    var v = VISITS.find(function(v){ return v.id === m.visita_id }) || {}
+    return { id:m.id, nome:m.nome, tipo:m.tipo, url:m.url, vDate:v.data_visita||'' }
+  }).sort(function(a,b){
+    return new Date(b.vDate||0) - new Date(a.vDate||0)
   })
-  var last = sorted[0]
-  var udEl = document.getElementById('rel-card-data')
-  var utEl = document.getElementById('rel-card-titulo')
-  if(udEl) udEl.textContent = last ? last.data_visita : '–'
-  if(utEl) utEl.textContent = last && last.titulo ? last.titulo.substring(0, 35) + (last.titulo.length > 35 ? '…' : '') : '–'
+  window._relAll = relList
+
+  // Cards
+  var e = function(id){ return document.getElementById(id) }
+  if(e('rel-card-visitas')) e('rel-card-visitas').textContent = VISITS.length
+  if(e('rel-card-docs'))    e('rel-card-docs').textContent    = relList.length
+
+  var lastV = VISITS.slice().sort(function(a,b){ return new Date(b.data_visita||0)-new Date(a.data_visita||0) })[0]
+  if(e('rel-card-data'))   e('rel-card-data').textContent   = lastV ? lastV.data_visita : ''
+  if(e('rel-card-titulo')) e('rel-card-titulo').textContent = lastV && lastV.titulo ? lastV.titulo.substring(0,35)+(lastV.titulo.length>35?'...':'') : ''
+
+  // Populate year select
+  var years = []
+  relList.forEach(function(m){
+    var yr = (m.vDate||'').match(/\d{4}/)
+    if(yr && years.indexOf(yr[0]) === -1) years.push(yr[0])
+  })
+  years.sort(function(a,b){ return b-a })
+  var sel = e('rel-year-sel')
+  if(sel){
+    sel.innerHTML = '<option value="">Todos</option>'
+    years.forEach(function(y){ sel.innerHTML += '<option value="'+y+'">'+y+'</option>' })
+  }
+
+  _drawRelDocs(relList)
+}
+
+function _drawRelDocs(list){
+  var html = list.map(function(m){
+    var p = typeIcon(m.tipo).split(' ')
+    var click = m.url && m.url !== '#' ? 'onclick="window.open(this.dataset.url)" data-url="'+m.url+'" style="cursor:pointer"' : ''
+    var dt = m.vDate ? ' · ' + m.vDate : ''
+    return '<div class="mat-item" '+click+'>' +
+      '<div class="mat-icon '+(p[1]||'mi-pdf')+'">'+p[0]+'</div>' +
+      '<div class="mat-info"><div class="mat-name">'+m.nome+'</div>' +
+      '<div class="mat-meta">PDF'+dt+'</div></div>' +
+      matAction(m.url) + '</div>'
+  }).join('')
+  var el = document.getElementById('rel-docs')
+  if(el) el.innerHTML = html || '<p style="color:var(--mt2)">Nenhum relatório disponível.</p>'
+}
+
+function filtRelYear(yr){
+  var all = window._relAll || []
+  _drawRelDocs(yr ? all.filter(function(m){ return (m.vDate||'').indexOf(yr) !== -1 }) : all)
 }
 
 // ══════════════════════════════════════════════
