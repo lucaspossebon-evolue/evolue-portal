@@ -284,6 +284,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 .adm-table td{padding:12px 16px;border-bottom:1px solid var(--bd2);font-size:13.5px;color:var(--tx);vertical-align:middle}
 #tbl-acoes-table th{padding:11px 10px}
 #tbl-acoes-table td{padding:10px 10px;font-size:13px}
+.chk-all,.chk-row{width:15px;height:15px;accent-color:var(--az1);cursor:pointer;flex-shrink:0}
 .adm-table tr:last-child td{border-bottom:none}
 .adm-table tr:hover td{background:var(--cr)}
 .adm-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--rsm);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:"Nunito Sans",sans-serif}
@@ -756,8 +757,30 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           <span class="adm-filter-count" id="filter-acoes-count"></span>
           <a class="adm-filter-clear" onclick="clearFilter('acoes')">Limpar</a>
         </div>
-        <div class="adm-add-bar"><button class="adm-btn adm-btn-primary" onclick="openModal('acao')">+ Nova ação</button></div>
-        <div class="adm-table-wrap"><table class="adm-table" id="tbl-acoes-table" style="table-layout:fixed;width:100%"><colgroup><col style="width:130px"><col style="width:22%"><col style="width:18%"><col style="width:110px"><col style="width:90px"><col style="width:80px"><col style="width:80px"><col style="width:80px"></colgroup><thead><tr><th>Cliente</th><th>Ação</th><th>Objetivo Geral</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbl-acoes"></tbody></table></div>
+
+        <!-- BARRA DE AÇÕES EM LOTE -->
+        <div id="bulk-bar" style="display:none;align-items:center;gap:10px;background:var(--az1);border-radius:var(--rsm);padding:10px 16px;margin-top:14px;flex-wrap:wrap">
+          <span id="bulk-bar-lbl" style="font-size:13px;font-weight:700;color:#fff;flex-shrink:0">0 selecionadas</span>
+          <div style="width:1px;height:18px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
+          <button class="adm-btn adm-btn-danger" style="border-radius:20px;padding:5px 14px;font-size:12px" onclick="bulkDeleteAcoes()">🗑 Apagar</button>
+          <button class="adm-btn" style="border-radius:20px;padding:5px 14px;font-size:12px;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)" onclick="bulkChangeObjetivo()">🎯 Alterar Objetivo</button>
+          <button class="adm-btn" style="border-radius:20px;padding:5px 14px;font-size:12px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.15);margin-left:auto" onclick="clearAcaoSelection()">✕ Cancelar</button>
+        </div>
+
+        <!-- PAINEL INLINE: ALTERAR OBJETIVO -->
+        <div id="bulk-obj-panel" style="display:none;background:var(--azp);border:1px solid var(--azp2);border-radius:var(--rsm);padding:14px 18px;margin-top:8px;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:var(--az1);flex-shrink:0">Alterar Objetivo Geral para:</span>
+          <select class="fm-select" id="bulk-obj-select" style="flex:1;min-width:200px;max-width:340px">
+            <option value="">— Sem objetivo —</option>
+          </select>
+          <button class="adm-btn adm-btn-primary" style="flex-shrink:0" onclick="bulkApplyObjetivo()">Aplicar</button>
+          <button class="adm-btn adm-btn-ghost" style="flex-shrink:0" onclick="document.getElementById('bulk-obj-panel').style.display='none'">Cancelar</button>
+        </div>
+
+        <div class="adm-add-bar" style="display:flex;align-items:center;gap:10px">
+          <button class="adm-btn adm-btn-primary" onclick="openModal('acao')">+ Nova ação</button>
+        </div>
+        <div class="adm-table-wrap"><table class="adm-table" id="tbl-acoes-table" style="table-layout:fixed;width:100%"><colgroup><col style="width:32px"><col style="width:120px"><col style="width:21%"><col style="width:17%"><col style="width:100px"><col style="width:80px"><col style="width:75px"><col style="width:75px"><col style="width:70px"></colgroup><thead><tr><th style="padding:11px 8px"><input type="checkbox" class="chk-all" id="chk-all-acoes" onchange="toggleAllAcoes(this)"></th><th>Cliente</th><th>Ação</th><th>Objetivo Geral</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbl-acoes"></tbody></table></div>
       </div>
       <div class="adm-page" id="adm-objetivos">
         <div class="adm-section-title">🎯 Objetivos / Diagnóstico</div>
@@ -1763,6 +1786,7 @@ function filterAdmTable(tab){
   }
 
   if(tab === 'acoes'){
+    clearAcaoSelection()
     const rows = document.querySelectorAll('#tbl-acoes tr')
     let visible = 0
     rows.forEach(r => {
@@ -1843,7 +1867,8 @@ async function renderAdminTables(){
     const objCell = objTitulo
       ? `<span style="font-size:11px;font-weight:700;color:var(--az2);background:var(--azp);border:1px solid var(--azp2);border-radius:20px;padding:2px 9px;display:inline-block;white-space:normal;line-height:1.4;word-break:break-word">🎯 ${objTitulo}</span>`
       : `<span style="color:var(--mt2);font-size:12px">—</span>`
-    return `<tr data-client-id="${a.cliente_id||''}">
+    return `<tr data-client-id="${a.cliente_id||''}" data-id="${a.id}">
+      <td style="padding:10px 8px"><input type="checkbox" class="chk-row" onchange="updateAcaoSelection()"></td>
       <td style="word-break:break-word"><strong>${a.clientes?.nome||'–'}</strong></td>
       <td style="word-break:break-word">${a.titulo}</td>
       <td style="word-break:break-word">${objCell}</td>
@@ -1853,6 +1878,8 @@ async function renderAdminTables(){
       <td><span class="badge ${a.concluida?'b-done':'b-future'}">${a.concluida?'Concluída':'Em aberto'}</span></td>
       <td><div style="display:flex;gap:4px"><button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editItem('acao','${a.id}')">✏️</button><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delItem('acoes_plano','${a.id}')">🗑</button></div></td>
     </tr>`}).join('')
+  // Reset seleção ao re-renderizar
+  clearAcaoSelection()
   filterAdmTable('acoes')
 }
 
@@ -2842,6 +2869,92 @@ async function bibUploadFile(input){
   if(error){ showToast('❌ Erro: ' + error.message) }
   else { showToast('✅ Arquivo enviado para a biblioteca!'); loadAdmBiblioteca() }
   setTimeout(() => { prog.style.display='none'; bar.style.width='0%'; input.value=''; }, 1200)
+}
+
+// ══════════════════════════════════════════════
+//  SELEÇÃO MÚLTIPLA — AÇÕES
+// ══════════════════════════════════════════════
+function toggleAllAcoes(chkAll){
+  document.querySelectorAll('#tbl-acoes .chk-row').forEach(c => {
+    c.checked = chkAll.checked
+    c.closest('tr').style.background = chkAll.checked ? 'var(--azp)' : ''
+  })
+  updateAcaoSelection()
+}
+
+function updateAcaoSelection(){
+  const all    = [...document.querySelectorAll('#tbl-acoes .chk-row')]
+  const sel    = all.filter(c => c.checked)
+  const bar    = document.getElementById('bulk-bar')
+  const lbl    = document.getElementById('bulk-bar-lbl')
+  const chkAll = document.getElementById('chk-all-acoes')
+
+  all.forEach(c => { c.closest('tr').style.background = c.checked ? 'var(--azp)' : '' })
+
+  if(chkAll){
+    chkAll.checked       = sel.length > 0 && sel.length === all.length
+    chkAll.indeterminate = sel.length > 0 && sel.length < all.length
+  }
+
+  if(sel.length > 0){
+    bar.style.display = 'flex'
+    lbl.textContent   = `${sel.length} ação${sel.length > 1 ? 'ões' : ''} selecionada${sel.length > 1 ? 's' : ''}`
+  } else {
+    bar.style.display = 'none'
+    document.getElementById('bulk-obj-panel').style.display = 'none'
+  }
+}
+
+function clearAcaoSelection(){
+  document.querySelectorAll('#tbl-acoes .chk-row').forEach(c => {
+    c.checked = false
+    c.closest('tr').style.background = ''
+  })
+  const chkAll = document.getElementById('chk-all-acoes')
+  if(chkAll){ chkAll.checked = false; chkAll.indeterminate = false }
+  const bar = document.getElementById('bulk-bar')
+  if(bar) bar.style.display = 'none'
+  const panel = document.getElementById('bulk-obj-panel')
+  if(panel) panel.style.display = 'none'
+}
+
+async function bulkDeleteAcoes(){
+  const sel = [...document.querySelectorAll('#tbl-acoes .chk-row')].filter(c => c.checked)
+  if(!sel.length) return
+  if(!confirm(`Apagar ${sel.length} ação${sel.length > 1 ? 'ões' : ''}? Esta ação não pode ser desfeita.`)) return
+  const ids = sel.map(c => c.closest('tr').dataset.id).filter(Boolean)
+  const { error } = await sb.from('acoes_plano').delete().in('id', ids)
+  if(error){ showToast('❌ Erro ao apagar: ' + error.message); return }
+  showToast(`✅ ${ids.length} ação${ids.length > 1 ? 'ões apagadas' : ' apagada'}!`)
+  clearAcaoSelection()
+  await renderAdminTables()
+}
+
+async function bulkChangeObjetivo(){
+  // Descobre o cliente das linhas selecionadas (pega o primeiro)
+  const sel = [...document.querySelectorAll('#tbl-acoes .chk-row')].filter(c => c.checked)
+  if(!sel.length) return
+  const clientId = sel[0].closest('tr').dataset.clientId
+  // Carrega objetivos do cliente
+  const { data } = await sb.from('objetivos_diagnostico').select('*').eq('cliente_id', clientId).order('ordem')
+  const objs = data || []
+  const objSel = document.getElementById('bulk-obj-select')
+  objSel.innerHTML = '<option value="">— Sem objetivo —</option>' +
+    objs.map(o => `<option value="${o.id}">${o.titulo}</option>`).join('')
+  document.getElementById('bulk-obj-panel').style.display = 'flex'
+}
+
+async function bulkApplyObjetivo(){
+  const sel = [...document.querySelectorAll('#tbl-acoes .chk-row')].filter(c => c.checked)
+  if(!sel.length) return
+  const ids      = sel.map(c => c.closest('tr').dataset.id).filter(Boolean)
+  const objId    = document.getElementById('bulk-obj-select').value || null
+  const { error } = await sb.from('acoes_plano').update({ objetivo_id: objId }).in('id', ids)
+  if(error){ showToast('❌ Erro: ' + error.message); return }
+  showToast(`✅ Objetivo atualizado em ${ids.length} ação${ids.length > 1 ? 'ões' : ''}!`)
+  document.getElementById('bulk-obj-panel').style.display = 'none'
+  clearAcaoSelection()
+  await renderAdminTables()
 }
 
 // ══════════════════════════════════════════════
