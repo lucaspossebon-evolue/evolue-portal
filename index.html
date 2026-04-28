@@ -1107,7 +1107,7 @@ async function loadClientData(){
   const [visRes, matRes, acRes, objRes] = await Promise.all([
     sb.from('visitas').select('*').eq('cliente_id', CUR.id).order('criado_em'),
     sb.from('materiais').select('*, visitas(cliente_id)').eq('visitas.cliente_id', CUR.id),
-    sb.from('acoes_plano').select('*').eq('cliente_id', CUR.id).order('criado_em'),
+    sb.from('acoes_plano').select('id, cliente_id, objetivo_id, titulo, responsavel, prazo, prioridade, concluida').eq('cliente_id', CUR.id).order('criado_em'),
     sb.from('objetivos_diagnostico').select('*').eq('cliente_id', CUR.id).order('ordem')
   ])
   VISITS = visRes.data || []
@@ -1359,32 +1359,73 @@ function filtRelYear(yr){
 // ══════════════════════════════════════════════
 function renderDiagnostico(){
   const objs = window._objCache || []
-  const colors = ['--az1','--az2','--az3']
+
   let objHtml = ''
   if(objs.length > 0){
-    objHtml = `<div style="margin-bottom:20px">
-      <div class="mat-lbl">🎯 Objetivos Estratégicos</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:10px">
-        ${objs.map((o,i)=>`
-          <div style="background:var(--br);border:1px solid var(--bd2);border-left:4px solid var(--az${(i%3)+1});border-radius:var(--rsm);padding:14px 16px;box-shadow:var(--sh)">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--mt2);margin-bottom:4px">Objetivo ${i+1}</div>
-            <div style="font-size:13.5px;font-weight:700;color:var(--az1);line-height:1.4">${o.titulo}</div>
-          </div>`).join('')}
-      </div>
-    </div>`
+    const cards = objs.map((o, i) => {
+      const acoesDest = ACOES.filter(a => a.objetivo_id === o.id)
+      const total = acoesDest.length
+      const done  = acoesDest.filter(a => a.concluida).length
+      const pct   = total > 0 ? Math.round((done / total) * 100) : -1
+
+      // Cores baseadas apenas no progresso
+      const barColor    = pct === 100 ? '#1D9E75' : pct > 0 ? '#C89A00' : '#D0D6E8'
+      const badgeBg     = pct === 100 ? '#1D9E75' : pct > 0 ? '#C89A00' : pct === 0 ? '#A32D2D' : '#D0D6E8'
+      const badgeTxtClr = '#fff'
+      const badgeLabel  = pct >= 0 ? `${pct}%` : '—'
+      const pctLabel    = total > 0 ? `${done}/${total} ações · ${pct}%` : 'Sem ações vinculadas'
+
+      return `
+        <div style="
+          background:var(--br);
+          border:1px solid var(--bd2);
+          border-top:4px solid var(--az1);
+          border-radius:var(--rsm);
+          padding:16px 18px 14px;
+          box-shadow:var(--sh);
+          display:flex;
+          flex-direction:column;
+          gap:10px;
+          min-width:0;
+        ">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--mt2)">Objetivo ${i+1}</div>
+            <div style="background:${badgeBg};color:${badgeTxtClr};font-size:11px;font-weight:800;font-family:'Nunito',sans-serif;border-radius:20px;padding:2px 10px;flex-shrink:0">${badgeLabel}</div>
+          </div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--az1);line-height:1.4;flex:1">${o.titulo}</div>
+          <div>
+            <div style="height:6px;background:var(--cr2);border-radius:10px;overflow:hidden;margin-bottom:5px">
+              <div style="height:100%;width:${pct >= 0 ? pct : 0}%;background:${barColor};border-radius:10px;transition:width .5s ease"></div>
+            </div>
+            <div style="font-size:10.5px;color:var(--mt2);font-weight:600">${pctLabel}</div>
+          </div>
+        </div>`
+    }).join('')
+
+    objHtml = `
+      <div style="margin-bottom:24px">
+        <div class="mat-lbl">🎯 Objetivos Estratégicos</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:12px">
+          ${cards}
+        </div>
+      </div>`
   }
+
   const container = document.getElementById('diagnostico-list')
-  // Render objetivos + materiais
   const mats = MATS.filter(m => ['diagnostico','form'].includes(m.tipo))
-  const matHtml = mats.length > 0 ? `<div class="mat-lbl" style="margin-top:${objs.length?'8px':'0'}">📁 Materiais do Diagnóstico</div>` + mats.map(m=>{
-    const [ico, cls] = typeIcon(m.tipo).split(' ')
-    const clickable = m.url && m.url !== '#' ? `onclick="window.open('${m.url}','_blank')" style="cursor:pointer"` : ''
-    return `<div class="mat-item" ${clickable}>
-      <div class="mat-icon ${cls}">${ico}</div>
-      <div class="mat-info"><div class="mat-name">${m.nome}</div><div class="mat-meta">${m.tipo.toUpperCase()}${m.url&&m.url!=='#'?' · clique para abrir':''}</div></div>
-      ${matAction(m.url)}
-    </div>`
-  }).join('') : ''
+  const matHtml = mats.length > 0
+    ? `<div class="mat-lbl" style="margin-top:${objs.length?'4px':'0'}">📁 Materiais do Diagnóstico</div>` +
+      mats.map(m => {
+        const [ico, cls] = typeIcon(m.tipo).split(' ')
+        const clickable = m.url && m.url !== '#' ? `onclick="window.open('${m.url}','_blank')" style="cursor:pointer"` : ''
+        return `<div class="mat-item" ${clickable}>
+          <div class="mat-icon ${cls}">${ico}</div>
+          <div class="mat-info"><div class="mat-name">${m.nome}</div><div class="mat-meta">${m.tipo.toUpperCase()}${m.url&&m.url!=='#'?' · clique para abrir':''}</div></div>
+          ${matAction(m.url)}
+        </div>`
+      }).join('')
+    : ''
+
   container.innerHTML = (objHtml || '') + (matHtml || '')
   if(!objHtml && !matHtml) container.innerHTML = '<p style="color:var(--mt2)">Nenhum diagnóstico disponível.</p>'
 }
@@ -1490,6 +1531,7 @@ async function togAcao(el){
   if(ac) ac.concluida = done
 
   updateAcaoCounters()
+  renderDiagnostico()
   showToast(done ? '✓ Ação concluída!' : 'Ação reaberta.')
 }
 
