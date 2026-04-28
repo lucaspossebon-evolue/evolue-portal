@@ -516,7 +516,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           </div>
         </div>
         <div class="nr1-banner">
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="nr1-tag" id="banner-tag">Programa NR-1 · Riscos Psicossociais</div>
             <div class="nr1-title">Acompanhe seu programa em tempo real</div>
             <div class="nr1-desc" id="banner-desc">Carregando dados...</div>
@@ -525,12 +525,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
               <div class="prog-lbl"><span id="prog-inicio">–</span><span id="prog-pct">–</span></div>
             </div>
           </div>
-          <div class="steps">
-            <div class="step s-done"><div class="step-num">✓</div><div class="step-lbl">Diagnóstico</div></div>
-            <div class="step s-done"><div class="step-num">✓</div><div class="step-lbl">Relatório</div></div>
-            <div class="step s-active"><div class="step-num">3</div><div class="step-lbl">Plano</div></div>
-            <div class="step s-future"><div class="step-num">4</div><div class="step-lbl">Formação</div></div>
-          </div>
+          <div id="obj-steps" style="display:flex;align-items:center;gap:18px;flex-shrink:0"></div>
         </div>
         <div class="sec-header"><div class="sec-title">Últimas visitas</div></div>
         <div class="cards-grid" id="home-visits"><div class="page-loading"><div class="spin"></div>Carregando visitas...</div></div>
@@ -1197,7 +1192,7 @@ function renderHome(){
   document.getElementById('h-prox').textContent     = prox ? prox.data_visita : '–'
   document.getElementById('h-prox-sub').textContent = prox ? prox.titulo.substring(0,30) : 'Nenhuma agendada'
 
-  // Banner
+  // Banner texto + barra geral
   const tipo = (CUR && CUR.tipo_portal) || 'nr1'
   const modelo = MODELOS[tipo] || MODELOS['nr1']
   const bannerTag = document.getElementById('banner-tag')
@@ -1207,7 +1202,56 @@ function renderHome(){
   document.getElementById('prog-pct').textContent   = pct + '% concluído'
   document.getElementById('prog-inicio').textContent = total > 0 ? 'Início — ' + VISITS[0].data_visita : '–'
 
-  // Cards
+  // Mini-painel de objetivos no banner: círculo geral + barras por objetivo
+  const objs = window._objCache || []
+  const stepsEl = document.getElementById('obj-steps')
+  if(stepsEl){
+    if(!objs.length){
+      stepsEl.innerHTML = ''
+    } else {
+      // Círculo SVG com % geral
+      const circ = 175.9
+      const offset = circ - (circ * pct / 100)
+      const ring = `<svg width="72" height="72" viewBox="0 0 72 72" style="flex-shrink:0">
+        <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="5"/>
+        <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="5"
+          stroke-dasharray="${circ}" stroke-dashoffset="${offset.toFixed(1)}"
+          stroke-linecap="round" transform="rotate(-90 36 36)"/>
+        <text x="36" y="40" text-anchor="middle" fill="#fff" font-size="13"
+          font-weight="500" font-family="Nunito Sans,sans-serif">${pct}%</text>
+      </svg>`
+
+      // Divisor vertical
+      const divider = `<div style="width:1px;height:80px;background:rgba(255,255,255,.1);flex-shrink:0"></div>`
+
+      // Barras por objetivo
+      const bars = objs.map(o => {
+        const acoesDest = ACOES.filter(a => a.objetivo_id === o.id)
+        const tot = acoesDest.length
+        const dn  = acoesDest.filter(a => a.concluida).length
+        const p   = tot > 0 ? Math.round((dn / tot) * 100) : -1
+
+        const barCol  = p === 100 ? '#1D9E75' : p > 0 ? '#C89A00' : p === 0 ? '#A32D2D' : 'rgba(255,255,255,.15)'
+        const pctCol  = p === 100 ? '#1D9E75' : p > 0 ? '#C89A00' : p === 0 ? '#F09595' : 'rgba(255,255,255,.3)'
+        const pctLbl  = p >= 0 ? p + '%' : '—'
+        const fillW   = p > 0 ? p : (p === 0 ? 2 : 0)
+        const titulo  = o.titulo.length > 12 ? o.titulo.substring(0, 11) + '…' : o.titulo
+
+        return `<div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:10px;color:rgba(255,255,255,.5);width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;flex-shrink:0">${titulo}</div>
+          <div style="flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;min-width:100px">
+            <div style="height:100%;width:${fillW}%;background:${barCol};border-radius:10px"></div>
+          </div>
+          <div style="font-size:10px;font-weight:700;color:${pctCol};width:26px;text-align:right;flex-shrink:0">${pctLbl}</div>
+        </div>`
+      }).join('')
+
+      stepsEl.innerHTML = ring + divider +
+        `<div style="display:flex;flex-direction:column;gap:7px;min-width:190px">${bars}</div>`
+    }
+  }
+
+  // Cards de visitas recentes
   const recent = [...VISITS].reverse().slice(0,4)
   document.getElementById('home-visits').innerHTML = recent.length ? recent.map(makeVisitCard).join('') : '<p style="color:var(--mt2);padding:20px">Nenhuma visita cadastrada ainda.</p>'
 }
@@ -1532,6 +1576,7 @@ async function togAcao(el){
 
   updateAcaoCounters()
   renderDiagnostico()
+  renderHome()
   showToast(done ? '✓ Ação concluída!' : 'Ação reaberta.')
 }
 
