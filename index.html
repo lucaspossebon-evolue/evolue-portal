@@ -1300,9 +1300,12 @@ function buildSidebar(){
   let html = ''
   modelo.grupos.forEach(grupo => {
     // Filter itens based on secoes ativas (for personalizado)
-    const itensVisiveis = secoesAtivas
+    let itensVisiveis = secoesAtivas
       ? grupo.itens.filter(item => secoesAtivas.includes(item.id))
       : grupo.itens
+
+    // Aba Treinamentos: opcional por cliente (padrão desligada)
+    if(!(CUR && CUR.mostrar_treinamentos)) itensVisiveis = itensVisiveis.filter(item => item.id !== 'treinamentos')
 
     if(itensVisiveis.length === 0) return // skip empty groups
 
@@ -2227,6 +2230,7 @@ async function openModal(type, editId=null){
           <option value="personalizado" ${item.tipo_portal==='personalizado'?'selected':''}>Personalizado</option>
         </select></div>
       </div>
+      <div class="fm-group" style="margin-top:4px"><label class="fm-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600"><input type="checkbox" id="fm-treino" ${item.mostrar_treinamentos?'checked':''} style="width:auto;margin:0"> Mostrar aba “Treinamentos” para este cliente</label></div>
       <div id="fm-secoes-wrap" style="display:${item.tipo_portal==='personalizado'?'block':'none'}">
         <div class="fm-label" style="margin-bottom:8px">Seções visíveis no portal</div>
         ${secoesHtml}
@@ -2350,7 +2354,7 @@ async function saveModal(){
       const checked = [...document.querySelectorAll('#fm-secoes-wrap input[type=checkbox]:checked')].map(cb=>cb.value)
       secoesVal = checked.join(',')
     }
-    payload = { nome: document.getElementById('fm-nome').value.trim(), login: document.getElementById('fm-login').value.trim().toLowerCase(), senha: document.getElementById('fm-senha').value.trim(), iniciais: document.getElementById('fm-ini').value.trim().toUpperCase(), tipo_portal: tipoPortal, secoes_personalizadas: secoesVal, ativo: true }
+    payload = { nome: document.getElementById('fm-nome').value.trim(), login: document.getElementById('fm-login').value.trim().toLowerCase(), senha: document.getElementById('fm-senha').value.trim(), iniciais: document.getElementById('fm-ini').value.trim().toUpperCase(), tipo_portal: tipoPortal, secoes_personalizadas: secoesVal, mostrar_treinamentos: !!(document.getElementById('fm-treino')&&document.getElementById('fm-treino').checked), ativo: true }
     if(!payload.nome || !payload.login || !payload.senha){ showToast('Preencha todos os campos!'); return; }
   } else if(_modalMode === 'visita'){
     table = 'visitas'
