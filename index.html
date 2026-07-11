@@ -713,12 +713,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
             <div class="stage-desc">Cronograma e conteúdos do programa de capacitação</div>
           </div>
         </div>
-        <div class="timeline">
-          <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">📅 05 mai 2025 · 14h00</div><div class="tl-title">Treinamento 01 — Gestão do Estresse</div><div class="tl-desc">Causas do estresse ocupacional, técnicas de regulação e papel da liderança.</div><div style="margin-top:10px;display:flex;gap:8px"><span class="badge b-pending">Agendado</span></div></div>
-          <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">📅 jun 2025</div><div class="tl-title">Treinamento 02 — Comunicação e Conflitos</div><div class="tl-desc">Comunicação não-violenta, escuta ativa e mediação.</div><div style="margin-top:10px"><span class="badge b-future">Planejado</span></div></div>
-          <div class="tl-item"><div class="tl-dot fut"></div><div class="tl-date">📅 jul 2025</div><div class="tl-title">Treinamento 03 — Liderança e Segurança Psicológica</div><div class="tl-desc">Ambientes seguros, cultura de confiança.</div><div style="margin-top:10px"><span class="badge b-future">Planejado</span></div></div>
-          <div class="tl-item"><div class="tl-dot fut"></div><div class="tl-date">📅 ago 2025</div><div class="tl-title">Treinamento 04 — Cultura e Engajamento</div><div class="tl-desc">Construção de cultura e práticas de engajamento de longo prazo.</div><div style="margin-top:10px"><span class="badge b-future">Planejado</span></div></div>
-        </div>
+        <div class="timeline" id="tr-client"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
       </div>
 
       <!-- VÍDEOS -->
@@ -929,6 +924,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
       <div class="adm-nav-item" onclick="admPage('acoes',this)">🧭 Plano de Ação</div>
       <div class="adm-nav-item" onclick="admPage('objetivos',this)">🎯 Objetivos / Diagnóstico</div>
       <div class="adm-nav-item" onclick="admPage('clima',this)">🌡️ Pesquisa de Clima</div>
+      <div class="adm-nav-item" onclick="admPage('treinamentos',this)">🎓 Treinamentos</div>
       <div class="adm-nav-item" onclick="admPage('biblioteca',this)">🗂️ Biblioteca de Arquivos</div>
     </div>
     <div class="adm-content">
@@ -1075,6 +1071,30 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
         <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Pesquisas cadastradas</div>
         <div id="cl-adm-list"></div>
       </div>
+      <div class="adm-page" id="adm-treinamentos">
+        <div class="av-card" style="padding:20px 22px;margin-bottom:18px">
+          <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:16px;margin-bottom:14px">Cadastrar treinamento</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="av-fld"><label>Cliente</label><select id="tr-a-cliente"><option value="">Selecione o cliente…</option></select></div>
+            <div class="av-fld"><label>Título</label><input id="tr-a-titulo" placeholder="Ex.: Treinamento 01 — Gestão do Estresse"></div>
+          </div>
+          <div class="av-fld" style="margin-top:12px"><label>Descrição</label><textarea id="tr-a-desc" rows="2" placeholder="Breve descrição do conteúdo"></textarea></div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 0.7fr;gap:14px;margin-top:12px">
+            <div class="av-fld"><label>Data (texto livre)</label><input id="tr-a-data" placeholder="05 mai 2025 · 14h00  ou  jun 2025"></div>
+            <div class="av-fld"><label>Status</label><select id="tr-a-status">
+              <option value="agendado">Agendado</option>
+              <option value="planejado" selected>Planejado</option>
+              <option value="concluido">Concluído</option>
+            </select></div>
+            <div class="av-fld"><label>Ordem</label><input id="tr-a-ordem" type="number" min="0" placeholder="1"></div>
+          </div>
+          <div class="av-fld" style="margin-top:12px"><label>Link (opcional — vídeo, material)</label><input id="tr-a-url" placeholder="https://…"></div>
+          <div style="margin-top:16px"><button class="av-btn av-btn-p" onclick="TR.saveAdmin()">Salvar treinamento</button></div>
+        </div>
+        <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Treinamentos cadastrados</div>
+        <div id="tr-adm-list"></div>
+      </div>
+
 
     </div>
   </div>
@@ -1405,6 +1425,7 @@ async function loadClientData(){
   renderDiagnostico()
   if(typeof AV!=='undefined') AV.load()
   if(typeof CL!=='undefined') CL.load()
+  if(typeof TR!=='undefined') TR.load()
 }
 
 // ══════════════════════════════════════════════
@@ -2001,6 +2022,7 @@ function admPage(id,el){
   if(id === 'biblioteca') loadAdmBiblioteca()
   if(id === 'objetivos') initObjetivosTab()
   if(id === 'clima') CL.loadAdmin()
+  if(id === 'treinamentos') TR.loadAdmin()
 }
 
 // ══════════════════════════════════════════════
@@ -3906,6 +3928,89 @@ async function del(id){
 
 return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,del:del};
 })();
+
+// ══════════════════════════════════════════════════════════════════════
+//  MÓDULO: Trilha de Treinamentos  (window.TR)
+//  Tabela Supabase: treinamentos (ver treinamentos.sql)
+// ══════════════════════════════════════════════════════════════════════
+window.TR = (function(){
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function fmt(d){if(!d)return"—";var p=String(d).slice(0,10).split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:d;}
+var ST={
+  agendado:{label:'Agendado',bg:'#FFF3CD',fg:'#8A6400',fut:false},
+  planejado:{label:'Planejado',bg:'#ECEEF4',fg:'#5A6A8A',fut:true},
+  concluido:{label:'Concluído',bg:'#E1F5EE',fg:'#0F6E56',fut:false}
+};
+function stOf(s){return ST[s]||ST.planejado;}
+var itens=[];
+
+async function load(){
+  try{
+    if(typeof CUR==='undefined'||!CUR)return;
+    var r=await sb.from('treinamentos').select('*').eq('cliente_id',CUR.id).order('ordem',{ascending:true}).order('criado_em',{ascending:true});
+    if(r.error){var h=document.getElementById('tr-client');if(h)h.innerHTML='<div class="av-empty">Módulo de treinamentos ainda não inicializado.<br><span style="font-size:12px">Rode <b>treinamentos.sql</b> no Supabase.</span></div>';return;}
+    itens=r.data||[];renderClient();
+  }catch(e){console.warn('[TR] load',e);}
+}
+function renderClient(){
+  var h=document.getElementById('tr-client'); if(!h)return;
+  if(!itens.length){h.innerHTML='<div class="av-empty">Nenhum treinamento cadastrado ainda.<br><span style="font-size:12px">Os treinamentos do programa aparecerão aqui.</span></div>';return;}
+  h.innerHTML=itens.map(function(t){
+    var s=stOf(t.status);
+    var link=(t.url&&t.url!=='#')?' <a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="text-decoration:none;font-size:12px;font-weight:800;color:var(--az3)">Abrir →</a>':'';
+    return '<div class="tl-item"><div class="tl-dot'+(s.fut?' fut':'')+'"></div>'+
+      (t.data_label?'<div class="tl-date">📅 '+esc(t.data_label)+'</div>':'')+
+      '<div class="tl-title">'+esc(t.titulo)+'</div>'+
+      (t.descricao?'<div class="tl-desc">'+esc(t.descricao)+'</div>':'')+
+      '<div style="margin-top:10px;display:flex;gap:10px;align-items:center">'+
+        '<span class="badge" style="background:'+s.bg+';color:'+s.fg+'">'+s.label+'</span>'+link+
+      '</div></div>';
+  }).join('');
+}
+
+// ───────── ADMIN ─────────
+async function loadAdmin(){
+  var cr=await sb.from('clientes').select('id,nome').order('nome');
+  var clients=(cr&&!cr.error&&cr.data)?cr.data:[];
+  var sel=document.getElementById('tr-a-cliente');
+  if(sel)sel.innerHTML='<option value="">Selecione o cliente…</option>'+clients.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join('');
+  var box=document.getElementById('tr-adm-list'); if(box)box.innerHTML='<div class="page-loading"><div class="spin"></div>Carregando...</div>';
+  var r=await sb.from('treinamentos').select('*').order('cliente_id').order('ordem',{ascending:true});
+  if(r.error){if(box)box.innerHTML='<div class="av-empty" style="padding:20px">Rode <b>treinamentos.sql</b> no Supabase para habilitar.</div>';return;}
+  var map={};clients.forEach(function(c){map[c.id]=c.nome;});
+  if(box)box.innerHTML=(r.data&&r.data.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+    ['Cliente','Título','Data','Status','Ordem',''].map(function(t){return '<th style="text-align:left;padding:8px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+
+    r.data.map(function(t){var s=stOf(t.status);return '<tr>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(map[t.cliente_id]||'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.titulo)+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.data_label||'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><span class="badge" style="background:'+s.bg+';color:'+s.fg+'">'+s.label+'</span></td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+(t.ordem!=null?t.ordem:'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="TR.del(\''+t.id+'\')">Excluir</button></td></tr>';}).join('')+
+    '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhum treinamento cadastrado ainda.</div>';
+}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+async function saveAdmin(){
+  var cliente_id=val('tr-a-cliente'); if(!cliente_id){alert('Selecione o cliente.');return;}
+  var titulo=val('tr-a-titulo'); if(!titulo){alert('Informe o título.');return;}
+  var payload={cliente_id:cliente_id,titulo:titulo,descricao:val('tr-a-desc')||null,
+    data_label:val('tr-a-data')||null,status:val('tr-a-status')||'planejado',
+    ordem:parseInt(val('tr-a-ordem'),10)||0,url:val('tr-a-url')||null};
+  var r=await sb.from('treinamentos').insert(payload).select();
+  if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
+  if(window.showToast)showToast('Treinamento cadastrado.');
+  ['tr-a-titulo','tr-a-desc','tr-a-data','tr-a-ordem','tr-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  loadAdmin();
+}
+async function del(id){
+  if(!confirm('Excluir este treinamento?'))return;
+  var r=await sb.from('treinamentos').delete().eq('id',id);
+  if(r.error){alert('Erro: '+r.error.message);return;}
+  if(window.showToast)showToast('Treinamento excluído.'); loadAdmin();
+}
+return {load:load,loadAdmin:loadAdmin,saveAdmin:saveAdmin,del:del};
+})();
+
 
 
 </script>
