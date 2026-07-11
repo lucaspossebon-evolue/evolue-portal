@@ -1067,7 +1067,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
             <div class="av-fld"><label id="cl-a-dl4">Saúde, Bem-estar e Jornada</label><input id="cl-a-d4" type="number" min="1" max="5" step="0.01" placeholder="3,92"></div>
           </div>
           <div class="av-fld" style="margin-top:14px"><label>Arquivo do relatório (PPTX ou PDF)</label>
-            <input id="cl-a-file" type="file" accept=".pptx,.pdf,.docx" onchange="CL.onFile(this)">
+            <input id="cl-a-file" type="file" accept=".pptx,.pdf,.docx" multiple onchange="CL.onFile(this)">
             <div id="cl-a-fileinfo" style="font-size:12px;color:var(--gnd);margin-top:6px"></div>
           </div>
           <div style="margin-top:16px"><button class="av-btn av-btn-p" onclick="CL.saveAdmin()">Salvar pesquisa</button></div>
@@ -3838,11 +3838,12 @@ function renderClient(){
 }
 
 // ───────────────────────── ADMIN ─────────────────────────
-var _fileUrl='', _fileName='';
+var _files=[];
 async function loadAdmin(){
   // popular select de clientes
+  var cr0=await sb.from('clientes').select('id,nome').order('nome');
+  var clients=(cr0&&!cr0.error&&cr0.data)?cr0.data:[];
   var sel=document.getElementById('cl-a-cliente');
-  var clients=(window._admData&&_admData.clients)?_admData.clients:[];
   if(sel)sel.innerHTML='<option value="">Selecione o cliente…</option>'+clients.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join('');
   // preencher rótulos das dimensões
   DIMS.forEach(function(d,i){var l=document.getElementById('cl-a-dl'+i);if(l)l.textContent=d.nome;});
@@ -3861,14 +3862,18 @@ async function loadAdmin(){
     '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhuma pesquisa cadastrada ainda.</div>';
 }
 async function onFile(input){
-  var file=input.files&&input.files[0]; if(!file)return;
-  var info=document.getElementById('cl-a-fileinfo'); if(info)info.textContent='Enviando '+file.name+'…';
-  var path='uploads/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  var up=await sb.storage.from(BUCKET).upload(path,file,{upsert:true});
-  if(up.error){if(info)info.textContent='Erro no upload: '+up.error.message;return;}
-  var u=sb.storage.from(BUCKET).getPublicUrl(path);
-  _fileUrl=u.data.publicUrl; _fileName=file.name;
-  if(info)info.textContent='✓ '+file.name;
+  var files=input.files; if(!files||!files.length)return;
+  var info=document.getElementById('cl-a-fileinfo'); _files=[];
+  for(var i=0;i<files.length;i++){
+    var file=files[i];
+    if(info)info.textContent='Enviando '+file.name+'…';
+    var path='uploads/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    var up=await sb.storage.from(BUCKET).upload(path,file,{upsert:true});
+    if(up.error){if(info)info.textContent='Erro no upload: '+up.error.message;return;}
+    var u=sb.storage.from(BUCKET).getPublicUrl(path);
+    _files.push({nome:file.name,url:u.data.publicUrl});
+  }
+  if(info)info.textContent='✓ '+_files.length+' arquivo(s): '+_files.map(function(f){return f.nome;}).join(', ');
 }
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 async function saveAdmin(){
@@ -3879,14 +3884,14 @@ async function saveAdmin(){
   if(cnt<DIMS.length){alert('Preencha a média (1–5) das 5 dimensões.');return;}
   var media_geral=+(soma/cnt).toFixed(2), indice_geral=Math.round(media_geral/5*100);
   var resp=parseInt(val('cl-a-resp'),10)||null, total=parseInt(val('cl-a-total'),10)||null;
-  var arquivos=_fileUrl?[{nome:_fileName||'Relatório',url:_fileUrl}]:[];
+  var arquivos=_files.slice();
   var payload={cliente_id:cliente_id,titulo:titulo,data_referencia:val('cl-a-data')||new Date().toISOString().slice(0,10),
     n_respondentes:resp,total_colaboradores:total,indicadores:indicadores,media_geral:media_geral,indice_geral:indice_geral,arquivos:arquivos};
   var r=await sb.from('pesquisas_clima').insert(payload).select();
   if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
   if(window.showToast)showToast('Pesquisa de clima cadastrada.');
   ['cl-a-titulo','cl-a-data','cl-a-resp','cl-a-total','cl-a-d0','cl-a-d1','cl-a-d2','cl-a-d3','cl-a-d4'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
-  _fileUrl='';_fileName='';var fi=document.getElementById('cl-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cl-a-file');if(fin)fin.value='';
+  _files=[];var fi=document.getElementById('cl-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cl-a-file');if(fin)fin.value='';
   loadAdmin();
 }
 async function del(id){
