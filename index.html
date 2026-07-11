@@ -603,11 +603,14 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
             <div class="sum-sub" id="h-acoes-sub">do plano de ação</div>
             <div style="font-size:10px;color:var(--mt2);margin-top:6px;font-weight:600;letter-spacing:.5px">VER PLANO →</div>
           </div>
-          <div class="sum-card" onclick="navShortcut('visitas')" title="Ver próximas visitas">
-            <div class="sum-lbl">Próximo encontro</div>
-            <div class="sum-val" style="font-size:20px" id="h-prox">–</div>
-            <div class="sum-sub" id="h-prox-sub">–</div>
-            <div style="font-size:10px;color:var(--mt2);margin-top:6px;font-weight:600;letter-spacing:.5px">VER VISITAS →</div>
+          <div class="sum-card" onclick="AV.go('colaboradores')" title="Gerir equipe">
+            <div class="sum-lbl">Avaliação · Status da Equipe</div>
+            <div style="display:flex;gap:16px;margin-top:2px">
+              <div><div class="sum-val" id="av-d-pend" style="font-size:24px;color:var(--mt2)">–</div><div class="sum-sub" style="color:var(--mt)">Sem avaliação</div></div>
+              <div><div class="sum-val" id="av-d-late" style="font-size:24px;color:var(--vm)">–</div><div class="sum-sub" style="color:var(--mt)">Vencidas</div></div>
+              <div><div class="sum-val" id="av-d-soon" style="font-size:24px;color:#D9A400">–</div><div class="sum-sub" style="color:var(--mt)">A vencer</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--mt2);margin-top:8px;font-weight:600;letter-spacing:.5px">GERIR EQUIPE →</div>
           </div>
         </div>
         <div class="nr1-banner">
@@ -1418,10 +1421,7 @@ function renderHome(){
   document.getElementById('h-acoes').textContent   = done + '/' + totAc
   document.getElementById('badge-plano').textContent = pct + '%'
 
-  // Próxima visita futura
-  const prox = VISITS.find(v => v.status === 'pending' || v.status === 'future')
-  document.getElementById('h-prox').textContent     = prox ? prox.data_visita : '–'
-  document.getElementById('h-prox-sub').textContent = prox ? prox.titulo.substring(0,30) : 'Nenhuma agendada'
+  // Card "Próximo encontro" substituído por "Status da Equipe" (preenchido por renderDash)
 
   // Banner texto + barra geral
   const tipo = (CUR && CUR.tipo_portal) || 'nr1'
@@ -3403,6 +3403,13 @@ async function load(){
 }
 
 // ── COLABORADORES ──
+function renderDash(){
+  var pend=colabs.filter(function(c){return prazoInfo(c).status==="pendente";}).length;
+  var late=colabs.filter(function(c){return prazoInfo(c).status==="vencida";}).length;
+  var soon=colabs.filter(function(c){return prazoInfo(c).status==="proxima";}).length;
+  var a=document.getElementById('av-d-pend'),b=document.getElementById('av-d-late'),d=document.getElementById('av-d-soon');
+  if(a)a.textContent=pend; if(b)b.textContent=late; if(d)d.textContent=soon;
+}
 function renderColaboradores(){
   var late=colabs.filter(function(c){return prazoInfo(c).status==="vencida";}).length;
   var soon=colabs.filter(function(c){return prazoInfo(c).status==="proxima";}).length;
@@ -3413,6 +3420,7 @@ function renderColaboradores(){
     '<div class="av-mini"><div class="n" style="color:var(--vm)">'+late+'</div><div class="l">Reavaliações vencidas</div></div>'+
     '<div class="av-mini"><div class="n" style="color:var(--am)">'+soon+'</div><div class="l">Vencem em 30 dias</div></div>'+
     '<div class="av-mini"><div class="n" style="color:var(--mt2)">'+pend+'</div><div class="l">Nunca avaliados</div></div>';
+  renderDash();
   var g=document.getElementById('av-colab-grid');
   if(!g)return;
   if(!colabs.length){g.innerHTML='<div class="av-empty">Nenhum colaborador cadastrado ainda.<br><span style="font-size:12px">Clique em “+ Novo colaborador” para começar.</span></div>';return;}
