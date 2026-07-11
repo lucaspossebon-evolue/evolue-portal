@@ -1306,6 +1306,8 @@ async function loadApp(cliente){
   document.getElementById('client-name').textContent = cliente.nome
   document.getElementById('tb-avatar').textContent   = cliente.iniciais
   buildSidebar()
+  // Sempre abrir no Dashboard ao entrar
+  var _home = document.querySelector('.nav-item[data-page="home"]'); if(_home) goPage('home', _home)
   await loadClientData()
 }
 
