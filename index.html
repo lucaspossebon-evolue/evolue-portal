@@ -1077,8 +1077,9 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           <div class="av-fld" style="margin-top:14px"><label>Arquivo do relatório (PPTX ou PDF)</label>
             <input id="cl-a-file" type="file" accept=".pptx,.pdf,.docx" multiple onchange="CL.onFile(this)">
             <div id="cl-a-fileinfo" style="font-size:12px;color:var(--gnd);margin-top:6px"></div>
+            <button class="av-btn av-btn-ghost av-btn-sm" id="cl-a-removefile" onclick="CL.removeFile()" style="display:none;color:var(--vm);margin-top:4px">Remover arquivo anexado</button>
           </div>
-          <div style="margin-top:16px"><button class="av-btn av-btn-p" onclick="CL.saveAdmin()">Salvar pesquisa</button></div>
+          <div style="margin-top:16px"><button class="av-btn av-btn-p" id="cl-a-savebtn" onclick="CL.saveAdmin()">Salvar pesquisa</button> <button class="av-btn av-btn-ghost" id="cl-a-cancelbtn" onclick="CL.cancelEdit()" style="display:none">Cancelar edição</button></div>
         </div>
         <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Pesquisas cadastradas</div>
         <div id="cl-adm-list"></div>
@@ -1101,7 +1102,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
             <div class="av-fld"><label>Ordem</label><input id="tr-a-ordem" type="number" min="0" placeholder="1"></div>
           </div>
           <div class="av-fld" style="margin-top:12px"><label>Link (opcional — vídeo, material)</label><input id="tr-a-url" placeholder="https://…"></div>
-          <div style="margin-top:16px"><button class="av-btn av-btn-p" onclick="TR.saveAdmin()">Salvar treinamento</button></div>
+          <div style="margin-top:16px"><button class="av-btn av-btn-p" id="tr-a-savebtn" onclick="TR.saveAdmin()">Salvar treinamento</button> <button class="av-btn av-btn-ghost" id="tr-a-cancelbtn" onclick="TR.cancelEdit()" style="display:none">Cancelar edição</button></div>
         </div>
         <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Treinamentos cadastrados</div>
         <div id="tr-adm-list"></div>
@@ -1127,9 +1128,10 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           <div class="av-fld" style="margin-top:12px"><label>Arquivo (opcional — PDF, imagem)</label>
             <input id="cn-a-file" type="file" accept=".pdf,.png,.jpg,.jpeg,.pptx,.docx" onchange="CN.onFile(this)">
             <div id="cn-a-fileinfo" style="font-size:12px;color:var(--gnd);margin-top:6px"></div>
+            <button class="av-btn av-btn-ghost av-btn-sm" id="cn-a-removefile" onclick="CN.removeFile()" style="display:none;color:var(--vm);margin-top:4px">Remover arquivo/link anexado</button>
           </div>
           <div class="av-fld" style="margin-top:8px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600"><input type="checkbox" id="cn-a-ativo" checked style="width:auto;margin:0"> Ativo (visível para os clientes)</label></div>
-          <div style="margin-top:12px"><button class="av-btn av-btn-p" onclick="CN.saveAdmin()">Publicar</button></div>
+          <div style="margin-top:12px"><button class="av-btn av-btn-p" id="cn-a-savebtn" onclick="CN.saveAdmin()">Publicar</button> <button class="av-btn av-btn-ghost" id="cn-a-cancelbtn" onclick="CN.cancelEdit()" style="display:none">Cancelar edição</button></div>
         </div>
         <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Conteúdos publicados</div>
         <div id="cn-adm-list"></div>
@@ -3928,7 +3930,7 @@ async function loadAdmin(){
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(p.titulo||'—')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+fmt(p.data_referencia)+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);font-family:Nunito;font-weight:800;color:var(--az1)">'+(indiceDe(p)!=null?indiceDe(p)+'%':'—')+'</td>'+
-      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="CL.del(\''+p.id+'\')">Excluir</button></td></tr>';}).join('')+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><button class="av-btn av-btn-ghost av-btn-sm" onclick="CL.edit(\''+p.id+'\')">Editar</button><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="CL.del(\''+p.id+'\')">Excluir</button></td></tr>';}).join('')+
     '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhuma pesquisa cadastrada ainda.</div>';
 }
 async function onFile(input){
@@ -3944,6 +3946,7 @@ async function onFile(input){
     _files.push({nome:file.name,url:u.data.publicUrl});
   }
   if(info)info.textContent='✓ '+_files.length+' arquivo(s): '+_files.map(function(f){return f.nome;}).join(', ');
+  var rmb=document.getElementById('cl-a-removefile'); if(rmb)rmb.style.display='none';
 }
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 async function saveAdmin(){
@@ -3954,14 +3957,14 @@ async function saveAdmin(){
   if(cnt<DIMS.length){alert('Preencha a média (1–5) das 5 dimensões.');return;}
   var media_geral=+(soma/cnt).toFixed(2), indice_geral=Math.round(media_geral/5*100);
   var resp=parseInt(val('cl-a-resp'),10)||null, total=parseInt(val('cl-a-total'),10)||null;
-  var arquivos=_files.slice();
+  var arquivos=(_files.length?_files.slice():(_editId?_editArq:[]));
   var payload={cliente_id:cliente_id,titulo:titulo,data_referencia:val('cl-a-data')||new Date().toISOString().slice(0,10),
     n_respondentes:resp,total_colaboradores:total,indicadores:indicadores,media_geral:media_geral,indice_geral:indice_geral,arquivos:arquivos};
-  var r=await sb.from('pesquisas_clima').insert(payload).select();
+  var r=(_editId? await sb.from('pesquisas_clima').update(payload).eq('id',_editId).select() : await sb.from('pesquisas_clima').insert(payload).select());
   if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
   if(window.showToast)showToast('Pesquisa de clima cadastrada.');
   ['cl-a-titulo','cl-a-data','cl-a-resp','cl-a-total','cl-a-d0','cl-a-d1','cl-a-d2','cl-a-d3','cl-a-d4'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
-  _files=[];var fi=document.getElementById('cl-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cl-a-file');if(fin)fin.value='';
+  _files=[];var fi=document.getElementById('cl-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cl-a-file');if(fin)fin.value=''; resetEdit();
   loadAdmin();
 }
 async function del(id){
@@ -3971,7 +3974,27 @@ async function del(id){
   if(window.showToast)showToast('Pesquisa excluída.'); loadAdmin();
 }
 
-return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,del:del};
+var _editId=null,_editArq=[];
+async function edit(id){
+  var q=await sb.from('pesquisas_clima').select('*').eq('id',id).single(); if(q.error||!q.data)return; var p=q.data;
+  document.getElementById('cl-a-cliente').value=p.cliente_id||'';
+  document.getElementById('cl-a-titulo').value=p.titulo||'';
+  document.getElementById('cl-a-data').value=p.data_referencia?String(p.data_referencia).slice(0,10):'';
+  document.getElementById('cl-a-resp').value=(p.n_respondentes!=null?p.n_respondentes:'');
+  document.getElementById('cl-a-total').value=(p.total_colaboradores!=null?p.total_colaboradores:'');
+  var ind=p.indicadores||[];
+  for(var i=0;i<DIMS.length;i++){var f=ind.filter(function(x){return x.dimensao===DIMS[i].nome;})[0];var e=document.getElementById('cl-a-d'+i);if(e)e.value=(f?f.media:'');}
+  _editId=id; _editArq=p.arquivos||[]; _files=[];
+  var fi=document.getElementById('cl-a-fileinfo'); if(fi)fi.textContent=(_editArq.length?('Arquivo atual: '+_editArq.map(function(a){return a.nome;}).join(', ')+' — anexe um novo para substituir'):'');
+  var rm=document.getElementById('cl-a-removefile'); if(rm)rm.style.display=(_editArq.length?'inline-flex':'none');
+  var b=document.getElementById('cl-a-savebtn'); if(b)b.textContent='Salvar alterações';
+  var c=document.getElementById('cl-a-cancelbtn'); if(c)c.style.display='inline-flex';
+  window.scrollTo(0,0);
+}
+function resetEdit(){ _editId=null; _editArq=[]; var b=document.getElementById('cl-a-savebtn'); if(b)b.textContent='Salvar pesquisa'; var c=document.getElementById('cl-a-cancelbtn'); if(c)c.style.display='none'; var rm=document.getElementById('cl-a-removefile'); if(rm)rm.style.display='none'; }
+function cancelEdit(){ resetEdit(); ['cl-a-titulo','cl-a-data','cl-a-resp','cl-a-total','cl-a-d0','cl-a-d1','cl-a-d2','cl-a-d3','cl-a-d4'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); var fi=document.getElementById('cl-a-fileinfo');if(fi)fi.textContent=''; }
+function removeFile(){ _editArq=[]; _files=[]; var fin=document.getElementById('cl-a-file'); if(fin)fin.value=''; var fi=document.getElementById('cl-a-fileinfo'); if(fi)fi.textContent='Arquivo removido — anexe um novo se desejar.'; var rm=document.getElementById('cl-a-removefile'); if(rm)rm.style.display='none'; }
+return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,del:del,edit:edit,cancelEdit:cancelEdit,removeFile:removeFile};
 })();
 
 // ══════════════════════════════════════════════════════════════════════
@@ -4031,7 +4054,7 @@ async function loadAdmin(){
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.data_label||'—')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><span class="badge" style="background:'+s.bg+';color:'+s.fg+'">'+s.label+'</span></td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+(t.ordem!=null?t.ordem:'—')+'</td>'+
-      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="TR.del(\''+t.id+'\')">Excluir</button></td></tr>';}).join('')+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><button class="av-btn av-btn-ghost av-btn-sm" onclick="TR.edit(\''+t.id+'\')">Editar</button><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="TR.del(\''+t.id+'\')">Excluir</button></td></tr>';}).join('')+
     '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhum treinamento cadastrado ainda.</div>';
 }
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
@@ -4041,10 +4064,10 @@ async function saveAdmin(){
   var payload={cliente_id:cliente_id,titulo:titulo,descricao:val('tr-a-desc')||null,
     data_label:val('tr-a-data')||null,status:val('tr-a-status')||'planejado',
     ordem:parseInt(val('tr-a-ordem'),10)||0,url:val('tr-a-url')||null};
-  var r=await sb.from('treinamentos').insert(payload).select();
+  var r=(_editId? await sb.from('treinamentos').update(payload).eq('id',_editId).select() : await sb.from('treinamentos').insert(payload).select());
   if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
   if(window.showToast)showToast('Treinamento cadastrado.');
-  ['tr-a-titulo','tr-a-desc','tr-a-data','tr-a-ordem','tr-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['tr-a-titulo','tr-a-desc','tr-a-data','tr-a-ordem','tr-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); resetEdit();
   loadAdmin();
 }
 async function del(id){
@@ -4053,7 +4076,24 @@ async function del(id){
   if(r.error){alert('Erro: '+r.error.message);return;}
   if(window.showToast)showToast('Treinamento excluído.'); loadAdmin();
 }
-return {load:load,loadAdmin:loadAdmin,saveAdmin:saveAdmin,del:del};
+var _editId=null;
+async function edit(id){
+  var q=await sb.from('treinamentos').select('*').eq('id',id).single(); if(q.error||!q.data)return; var t=q.data;
+  document.getElementById('tr-a-cliente').value=t.cliente_id||'';
+  document.getElementById('tr-a-titulo').value=t.titulo||'';
+  document.getElementById('tr-a-desc').value=t.descricao||'';
+  document.getElementById('tr-a-data').value=t.data_label||'';
+  document.getElementById('tr-a-status').value=t.status||'planejado';
+  document.getElementById('tr-a-ordem').value=(t.ordem!=null?t.ordem:'');
+  document.getElementById('tr-a-url').value=t.url||'';
+  _editId=id;
+  var b=document.getElementById('tr-a-savebtn'); if(b)b.textContent='Salvar alterações';
+  var c=document.getElementById('tr-a-cancelbtn'); if(c)c.style.display='inline-flex';
+  window.scrollTo(0,0);
+}
+function resetEdit(){ _editId=null; var b=document.getElementById('tr-a-savebtn'); if(b)b.textContent='Salvar treinamento'; var c=document.getElementById('tr-a-cancelbtn'); if(c)c.style.display='none'; }
+function cancelEdit(){ resetEdit(); ['tr-a-titulo','tr-a-desc','tr-a-data','tr-a-ordem','tr-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); }
+return {load:load,loadAdmin:loadAdmin,saveAdmin:saveAdmin,del:del,edit:edit,cancelEdit:cancelEdit};
 })();
 
 // ══════════════════════════════════════════════════════════════════════
@@ -4121,7 +4161,7 @@ async function loadAdmin(){
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+(t.ativo?'<span class="av-badge av-b-ok">Ativo</span>':'<span class="av-badge av-b-none">Oculto</span>')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);white-space:nowrap">'+
         '<button class="av-btn av-btn-ghost av-btn-sm" onclick="CN.toggle(\''+t.id+'\','+(t.ativo?'false':'true')+')">'+(t.ativo?'Ocultar':'Ativar')+'</button>'+
-        '<button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="CN.del(\''+t.id+'\')">Excluir</button></td></tr>';}).join('')+
+        '<button class="av-btn av-btn-ghost av-btn-sm" onclick="CN.edit(\''+t.id+'\')">Editar</button><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="CN.del(\''+t.id+'\')">Excluir</button></td></tr>';}).join('')+
     '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhum conteúdo cadastrado ainda.</div>';
 }
 async function onFile(input){
@@ -4133,19 +4173,20 @@ async function onFile(input){
   var u=sb.storage.from(BUCKET).getPublicUrl(path);
   _fileUrl=u.data.publicUrl;_fileName=file.name;
   if(info)info.textContent='✓ '+file.name;
+  var rmb=document.getElementById('cn-a-removefile'); if(rmb)rmb.style.display='none';
 }
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 async function saveAdmin(){
   var titulo=val('cn-a-titulo'); if(!titulo){alert('Informe o título.');return;}
-  var url=val('cn-a-url')||_fileUrl||null;
+  var url=_fileUrl||val('cn-a-url')||null;
   var payload={categoria:val('cn-a-cat')||'informativo',titulo:titulo,descricao:val('cn-a-desc')||null,
     ordem:parseInt(val('cn-a-ordem'),10)||0,url:url,
     ativo:!!(document.getElementById('cn-a-ativo')&&document.getElementById('cn-a-ativo').checked)};
-  var r=await sb.from('conteudos_nr1').insert(payload).select();
+  var r=(_editId? await sb.from('conteudos_nr1').update(payload).eq('id',_editId).select() : await sb.from('conteudos_nr1').insert(payload).select());
   if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
   if(window.showToast)showToast('Conteúdo publicado.');
   ['cn-a-titulo','cn-a-desc','cn-a-ordem','cn-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
-  _fileUrl='';_fileName='';var fi=document.getElementById('cn-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cn-a-file');if(fin)fin.value='';
+  _fileUrl='';_fileName='';var fi=document.getElementById('cn-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cn-a-file');if(fin)fin.value=''; resetEdit();
   loadAdmin();
 }
 async function toggle(id,ativo){
@@ -4158,7 +4199,26 @@ async function del(id){
   if(r.error){alert('Erro: '+r.error.message);return;}
   if(window.showToast)showToast('Conteúdo excluído.'); loadAdmin();
 }
-return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,toggle:toggle,del:del};
+var _editId=null;
+async function edit(id){
+  var q=await sb.from('conteudos_nr1').select('*').eq('id',id).single(); if(q.error||!q.data)return; var t=q.data;
+  document.getElementById('cn-a-cat').value=t.categoria||'informativo';
+  document.getElementById('cn-a-titulo').value=t.titulo||'';
+  document.getElementById('cn-a-desc').value=t.descricao||'';
+  document.getElementById('cn-a-ordem').value=(t.ordem!=null?t.ordem:'');
+  document.getElementById('cn-a-url').value=t.url||'';
+  var av=document.getElementById('cn-a-ativo'); if(av)av.checked=(t.ativo!==false);
+  _editId=id; _fileUrl=''; _fileName='';
+  var fi=document.getElementById('cn-a-fileinfo'); if(fi)fi.textContent=(t.url?'Arquivo/link atual mantido — anexe um novo para substituir':'');
+  var rm=document.getElementById('cn-a-removefile'); if(rm)rm.style.display=(t.url?'inline-flex':'none');
+  var b=document.getElementById('cn-a-savebtn'); if(b)b.textContent='Salvar alterações';
+  var c=document.getElementById('cn-a-cancelbtn'); if(c)c.style.display='inline-flex';
+  window.scrollTo(0,0);
+}
+function resetEdit(){ _editId=null; var b=document.getElementById('cn-a-savebtn'); if(b)b.textContent='Publicar'; var c=document.getElementById('cn-a-cancelbtn'); if(c)c.style.display='none'; var rm=document.getElementById('cn-a-removefile'); if(rm)rm.style.display='none'; }
+function cancelEdit(){ resetEdit(); ['cn-a-titulo','cn-a-desc','cn-a-ordem','cn-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); var fi=document.getElementById('cn-a-fileinfo');if(fi)fi.textContent=''; }
+function removeFile(){ _fileUrl=''; _fileName=''; var u=document.getElementById('cn-a-url'); if(u)u.value=''; var fin=document.getElementById('cn-a-file'); if(fin)fin.value=''; var fi=document.getElementById('cn-a-fileinfo'); if(fi)fi.textContent='Arquivo/link removido.'; var rm=document.getElementById('cn-a-removefile'); if(rm)rm.style.display='none'; }
+return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,toggle:toggle,del:del,edit:edit,cancelEdit:cancelEdit,removeFile:removeFile};
 })();
 
 
