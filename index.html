@@ -429,6 +429,100 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
   #mob-back-bar{display:none!important}
 }
 @media(max-width:640px){.content{padding:20px 18px 60px}.topbar{padding:0 18px}}
+
+/* ===== Módulo Avaliação de Desempenho / Colaboradores (namespaced av-) ===== */
+#page-colaboradores, #page-avaliacoes{color:var(--tx)}
+.av-alert{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.av-mini{flex:1;min-width:150px;background:#fff;border:1px solid var(--bd2);border-radius:var(--rsm);padding:12px 15px;box-shadow:var(--sh)}
+.av-mini .n{font-family:"Nunito",sans-serif;font-weight:800;font-size:24px;line-height:1}
+.av-mini .l{font-size:11.5px;color:var(--mt);margin-top:3px;font-weight:600}
+.av-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.av-card{background:#fff;border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.av-ctop{display:flex;align-items:center;gap:13px}
+.av-avatar{width:44px;height:44px;border-radius:50%;background:var(--az1);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Nunito";font-weight:800;font-size:15px;flex-shrink:0}
+.av-cname{font-family:"Nunito";font-weight:800;font-size:15.5px;color:var(--tx)}
+.av-crole{font-size:12.5px;color:var(--mt)}
+.av-cmeta{display:flex;gap:16px;font-size:12.5px;color:var(--mt);border-top:1px solid var(--bd2);padding-top:11px}
+.av-cmeta b{color:var(--tx);font-weight:700}
+.av-cact{display:flex;gap:8px}
+.av-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;font-family:"Nunito";padding:3px 10px;border-radius:20px;white-space:nowrap}
+.av-b-ok{background:var(--gnl);color:var(--gnd)}
+.av-b-warn{background:var(--aml);color:var(--am)}
+.av-b-late{background:var(--vml);color:var(--vm)}
+.av-b-none{background:var(--cr2);color:var(--mt)}
+.av-b-blue{background:var(--azp);color:var(--az2)}
+.av-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.av-btn{font-family:"Nunito";font-weight:800;font-size:13px;border:none;border-radius:var(--rsm);padding:9px 15px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.av-btn-p{background:var(--az1);color:#fff}.av-btn-p:hover{background:var(--az2)}
+.av-btn-o{background:#fff;color:var(--az1);border:1.5px solid var(--bd)}.av-btn-o:hover{border-color:var(--az3);background:var(--azp)}
+.av-btn-g{background:var(--gn);color:#fff}.av-btn-g:hover{background:var(--gnd)}
+.av-btn-sm{padding:7px 12px;font-size:12.5px}
+.av-btn-ghost{background:transparent;color:var(--mt);border:none;font-weight:700;cursor:pointer;font-family:"Nunito Sans";font-size:13px}
+.av-btn[disabled]{opacity:.45;cursor:default}
+
+.av-layout{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+@media(max-width:900px){.av-layout{grid-template-columns:1fr}}
+.av-ident{background:#fff;border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;margin-bottom:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:720px){.av-ident{grid-template-columns:1fr 1fr}}
+.av-fld label{display:block;font-size:11px;font-weight:700;color:var(--mt);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.av-fld input,.av-fld select,.av-fld textarea{width:100%;border:1.5px solid var(--bd);border-radius:var(--rsm);padding:9px 11px;font-family:"Nunito Sans";font-size:14px;color:var(--tx);background:#fff;outline:none;transition:.15s}
+.av-fld input:focus,.av-fld select:focus,.av-fld textarea:focus{border-color:var(--az3)}
+.av-fld input[readonly]{background:var(--cr);color:var(--mt)}
+
+.av-comp{background:#fff;border:1px solid var(--bd2);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh)}
+.av-chead{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.av-chead:hover{background:var(--azp)}
+.av-cnum{width:28px;height:28px;border-radius:8px;background:var(--az1);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Nunito";font-weight:800;font-size:13px;flex-shrink:0}
+.av-ctit{flex:1}
+.av-ctit .t{font-family:"Nunito";font-weight:800;font-size:14px;color:var(--az1)}
+.av-ctit .d{font-size:11.5px;color:var(--mt);margin-top:1px}
+.av-cscore{font-family:"Nunito";font-weight:800;font-size:15px;color:var(--mt2);min-width:34px;text-align:right}
+.av-cscore.done{color:var(--az1)}
+.av-chev{transition:.2s;color:var(--mt2);flex-shrink:0;margin-top:3px}
+.av-comp.open .av-chev{transform:rotate(90deg)}
+.av-cbody{padding:0 16px 10px;display:none}
+.av-comp.open .av-cbody{display:block}
+.av-comp.open .av-chead{border-bottom:1px solid var(--bd2)}
+.av-ques{padding:11px 0;border-bottom:1px dashed var(--bd2)}
+.av-ques:last-child{border-bottom:none}
+.av-qt{font-weight:700;font-size:13px;color:var(--tx);margin-bottom:9px}
+.av-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(max-width:560px){.av-opts{grid-template-columns:1fr}}
+.av-opt{border:1.5px solid var(--bd);border-radius:var(--rsm);padding:9px 11px;cursor:pointer;display:flex;gap:9px;align-items:flex-start;transition:.12s;background:#fff}
+.av-opt:hover{border-color:var(--az3);background:var(--azp)}
+.av-opt.sel{border-color:var(--az1);background:var(--azp);box-shadow:inset 0 0 0 1px var(--az1)}
+.av-pt{font-family:"Nunito";font-weight:800;font-size:13px;color:#fff;background:var(--mt2);border-radius:6px;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av-opt.sel .av-pt{background:var(--az1)}
+.av-otx{font-size:12px;color:var(--mt);line-height:1.4}
+.av-opt.sel .av-otx{color:var(--tx)}
+
+.av-panel{position:sticky;top:78px}
+.av-hero{padding:18px;text-align:center;border-bottom:1px solid var(--bd2)}
+.av-big{font-family:"Nunito";font-weight:800;font-size:44px;line-height:1;color:var(--az1)}
+.av-big small{font-size:17px;color:var(--mt2)}
+.av-prog{font-size:11.5px;color:var(--mt);margin-top:6px}
+.av-narr{font-size:12.5px;color:var(--mt);line-height:1.5;margin:10px 0 12px;padding:11px 13px;background:var(--cr);border-radius:var(--rsm);border-left:3px solid var(--az3)}
+.av-elig{font-size:12.5px;font-weight:700;padding:10px 13px;border-radius:var(--rsm)}
+.av-elig-tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:var(--mt2);text-transform:uppercase;margin-bottom:6px;display:block}
+.av-cb{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11.5px}
+.av-cb .lbl{width:92px;color:var(--mt);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av-cb .track{flex:1;height:7px;background:var(--cr2);border-radius:4px;overflow:hidden}
+.av-cb .fill{height:100%;border-radius:4px;transition:width .3s}
+.av-cb .v{width:26px;text-align:right;font-family:"Nunito";font-weight:800;color:var(--tx)}
+
+.av-ov{position:fixed;inset:0;background:rgba(20,30,55,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.av-ov.open{display:flex}
+.av-modal{background:#fff;border-radius:var(--r);width:100%;max-width:560px;box-shadow:var(--shm);max-height:90vh;overflow:auto}
+.av-mhead{padding:16px 22px;border-bottom:1px solid var(--bd2);font-family:"Nunito";font-weight:800;font-size:16px;color:var(--az1)}
+.av-mbody{padding:18px 22px}
+.av-mbody .av-fld{margin-bottom:13px}
+.av-mfoot{padding:14px 22px;border-top:1px solid var(--bd2);display:flex;justify-content:flex-end;gap:10px}
+.av-htbl{width:100%;border-collapse:collapse;font-size:13px}
+.av-htbl th,.av-htbl td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--bd2)}
+.av-htbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mt);font-weight:700}
+.av-up{color:var(--gnd);font-weight:800}.av-dn{color:var(--vm);font-weight:800}.av-eq{color:var(--mt2)}
+.av-empty{padding:38px;text-align:center;color:var(--mt2);font-size:14px}
+
 </style>
 </head>
 <body>
@@ -686,6 +780,117 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
         </div>
         <div id="testes-list"><p style="color:var(--mt2)">Nenhum teste ou pesquisa disponível.</p></div>
       </div>
+      <!-- COLABORADORES (Gestão de Pessoas) -->
+      <div class="page" id="page-colaboradores">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title">Gestão de Colaboradores</div>
+            <div class="stage-desc">Acompanhe as avaliações da sua equipe e os prazos das próximas reavaliações.</div>
+          </div>
+        </div>
+        <div class="av-alert" id="av-alert"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 14px">
+          <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px">Equipe</div>
+          <div style="display:flex;gap:8px">
+            <button class="av-btn av-btn-o av-btn-sm" onclick="AV.openBulk()">Importar vários</button>
+            <button class="av-btn av-btn-p av-btn-sm" onclick="AV.openColab()">+ Novo colaborador</button>
+          </div>
+        </div>
+        <div class="av-grid" id="av-colab-grid"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
+      </div>
+
+      <!-- AVALIAÇÃO DE DESEMPENHO -->
+      <div class="page" id="page-avaliacoes">
+        <div class="stage-head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:14px">
+          <div>
+            <div class="stage-title" id="av-eval-title">Nova Avaliação de Desempenho</div>
+            <div class="stage-desc">Selecione, em cada quesito, o nível que melhor descreve o colaborador.</div>
+          </div>
+          <button class="av-btn av-btn-ghost" onclick="AV.go('colaboradores')">← Voltar</button>
+        </div>
+        <div class="av-ident">
+          <div class="av-fld"><label>Avaliado</label><select id="av-f-colab" onchange="AV.onPickColab()"></select></div>
+          <div class="av-fld"><label>Cargo</label><input id="av-f-cargo" placeholder="—" readonly></div>
+          <div class="av-fld"><label>Avaliador</label><input id="av-f-avaliador" placeholder="Nome do gestor"></div>
+          <div class="av-fld"><label>Data</label><input id="av-f-data" type="date"></div>
+        </div>
+        <div class="av-layout">
+          <div id="av-comp-list"></div>
+          <div class="av-panel">
+            <div class="av-card" style="padding:0">
+              <div class="av-hero">
+                <div class="av-big" id="av-p-score">—<small>/10</small></div>
+                <div class="av-prog" id="av-p-prog">0 de 40 quesitos avaliados</div>
+                <div style="margin-top:10px" id="av-p-classif"></div>
+              </div>
+              <div style="padding:16px 18px">
+                <div style="text-align:center" id="av-radar"></div>
+                <div class="av-narr" id="av-p-narr">Preencha os quesitos para ver a análise.</div>
+                <span class="av-elig-tag">Elegibilidade a reajuste · uso interno da gestão</span>
+                <div class="av-elig av-b-none" id="av-p-elig">Aguardando avaliação</div>
+                <div id="av-p-bars" style="margin-top:16px"></div>
+                <div class="av-fld" style="margin-top:16px"><label>Observação geral</label>
+                  <textarea id="av-f-obs" rows="3" placeholder="Pontos fortes, plano de desenvolvimento, combinados..."></textarea>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:14px">
+                  <button class="av-btn av-btn-g" style="flex:1" onclick="AV.save()">Salvar avaliação</button>
+                  <button class="av-btn av-btn-o" onclick="AV.print()">Imprimir / PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: novo colaborador -->
+      <div class="av-ov" id="av-ov-colab" onclick="if(event.target===this)AV.closeColab()">
+        <div class="av-modal" style="max-width:460px">
+          <div class="av-mhead">Novo colaborador</div>
+          <div class="av-mbody">
+            <div class="av-fld"><label>Nome</label><input id="av-m-nome" placeholder="Nome completo"></div>
+            <div class="av-fld"><label>Cargo</label><input id="av-m-cargo" placeholder="Ex.: Frentista, Vendedor(a)"></div>
+            <div class="av-fld"><label>Setor</label><input id="av-m-setor" placeholder="Ex.: Pista, Loja de conveniência"></div>
+            <div style="display:flex;gap:14px">
+              <div class="av-fld" style="flex:1"><label>Admissão</label><input id="av-m-adm" type="date"></div>
+              <div class="av-fld" style="flex:1"><label>Periodicidade (meses)</label><input id="av-m-per" type="number" value="12" min="1"></div>
+            </div>
+          </div>
+          <div class="av-mfoot">
+            <button class="av-btn av-btn-ghost" onclick="AV.closeColab()">Cancelar</button>
+            <button class="av-btn av-btn-p" onclick="AV.saveColab()">Salvar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: importar vários -->
+      <div class="av-ov" id="av-ov-bulk" onclick="if(event.target===this)AV.closeBulk()">
+        <div class="av-modal">
+          <div class="av-mhead">Importar vários colaboradores</div>
+          <div class="av-mbody">
+            <div style="font-size:12.5px;color:var(--mt);margin-bottom:10px">Cole um colaborador por linha. Campos separados por <b>;</b> (ponto e vírgula):<br><code style="font-size:12px;color:var(--az2)">Nome ; Cargo ; Setor ; Admissão(dd/mm/aaaa) ; Periodicidade</code><br>Só o <b>nome</b> é obrigatório — o resto pode ficar em branco.</div>
+            <div class="av-fld"><label>Lista</label><textarea id="av-bulk-txt" rows="7" oninput="AV.previewBulk()" placeholder="Ana Souza ; Vendedora ; Loja ; 10/02/2023 ; 12&#10;Carlos Lima ; Frentista ; Pista&#10;Marina Alves"></textarea></div>
+            <div class="av-fld" style="max-width:240px"><label>Periodicidade padrão (meses)</label><input id="av-bulk-per" type="number" value="12" min="1" oninput="AV.previewBulk()"></div>
+            <div id="av-bulk-prev" style="margin-top:8px"></div>
+          </div>
+          <div class="av-mfoot">
+            <button class="av-btn av-btn-ghost" onclick="AV.closeBulk()">Cancelar</button>
+            <button class="av-btn av-btn-p" onclick="AV.saveBulk()">Importar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: histórico -->
+      <div class="av-ov" id="av-ov-hist" onclick="if(event.target===this)AV.closeHist()">
+        <div class="av-modal">
+          <div class="av-mhead" id="av-hist-title">Histórico</div>
+          <div class="av-mbody" style="padding:8px 12px">
+            <table class="av-htbl"><thead><tr><th>Data</th><th>Avaliador</th><th>Nota</th><th>Classificação</th><th>Variação</th><th></th></tr></thead>
+            <tbody id="av-hist-body"></tbody></table>
+          </div>
+          <div class="av-mfoot"><button class="av-btn av-btn-ghost" onclick="AV.closeHist()">Fechar</button></div>
+        </div>
+      </div>
+
 
     </div>
   </div>
@@ -1149,6 +1354,7 @@ async function loadClientData(){
   renderProcedimentos()
   renderTestes()
   renderDiagnostico()
+  if(typeof AV!=='undefined') AV.load()
 }
 
 // ══════════════════════════════════════════════
@@ -1654,6 +1860,8 @@ const PAGES = {
   testes:{t:'Testes e Pesquisas',b:'Avaliações e pesquisas'},
   videos:{t:'Vídeos',b:'Gravações das sessões'},
   docs:{t:'Documentos',b:'Todos os materiais disponíveis'},
+  colaboradores:{t:'Colaboradores',b:'Gestão de pessoas e avaliações'},
+  avaliacoes:{t:'Avaliação de Desempenho',b:'Avaliação de competências'},
 }
 function navShortcut(id){
   // Find and click the matching nav item
@@ -3060,6 +3268,398 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('show')
   clearTimeout(_t); _t = setTimeout(()=>t.classList.remove('show'), 2800)
 }
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  MÓDULO: Gestão de Colaboradores + Avaliação de Desempenho  (window.AV)
+//  Fonte do modelo: AVALIACAO_DE_DESEMPENHO_EVOLUE_NOVO (escala 4/6/8/10)
+//  Tabelas Supabase: colaboradores, avaliacoes  (schema_portal_nr1.sql)
+// ══════════════════════════════════════════════════════════════════════
+window.AV = (function(){
+const COMPETENCIAS = [
+ {n:1,nome:"Comunicação",desc:"Transmite e interpreta informações de forma clara e objetiva, ouve com atenção e assegura o entendimento.",q:[
+  {t:"1.1 Transmite informações com clareza, objetividade e linguagem adequada",o:["Utiliza linguagem inadequada ou confusa","Apresenta dificuldade na fala e/ou na escrita","Transmite conforme esperado","Transmite com excelência e é referência"]},
+  {t:"1.2 Ouve com atenção e interpreta corretamente",o:["Dificuldade para prestar atenção e comete erros de interpretação","Ouve e não questiona, cometendo erros de interpretação","Ouve e faz perguntas, se necessário, para melhorar o entendimento","Ouve com atenção, entende o ponto de vista do outro facilmente"]},
+  {t:"1.3 Acompanha a comunicação assegurando o entendimento do outro",o:["Não acompanha o que foi comunicado","Acompanha, mas não confirma entendimento","Acompanha e confirma entendimento","Acompanha, confirma e monitora o resultado"]},
+  {t:"1.4 Fornece e recebe feedback de maneira adequada",o:["Dificuldade em fornecer e receber feedback","Fornece (ou recebe), mas tem dificuldade no inverso","Fornece e recebe feedback de maneira adequada","Fornece e recebe feedback e utiliza para seu desenvolvimento"]}
+ ]},
+ {n:2,nome:"Conhecimento",desc:"Busca e aplica seus conhecimentos teóricos e práticos de maneira correta em suas atividades.",q:[
+  {t:"2.1 Possui escolaridade para o cargo",o:["Não possui","Está cursando","Possui","Possui além do exigido"]},
+  {t:"2.2 Possui cursos exigidos em sua função",o:["Não possui","Está cursando","Possui os cursos exigidos","Possui cursos além dos exigidos"]},
+  {t:"2.3 Aplica os conhecimentos teóricos e práticos na sua função",o:["Não aplica","Aplica com dificuldade","Aplica adequadamente","Aplica e compartilha, quando necessário"]},
+  {t:"2.4 Busca novos conhecimentos e compartilha aprendizados",o:["Não é disposto","Se desenvolve com dificuldade","Se desenvolve adequadamente","Se desenvolve e compartilha, quando necessário"]}
+ ]},
+ {n:3,nome:"Iniciativa",desc:"Realiza atividades de forma proativa.",q:[
+  {t:"3.1 Busca manter-se continuamente ocupado",o:["Não busca","Busca somente quando solicitado","Procura o superior quando tem disponibilidade","Ocupa-se com foco no resultado sem solicitação"]},
+  {t:"3.2 Executa as atividades de sua função sem solicitação do superior",o:["Não executa","Só executa quando solicitado","Executa","Executa e procura novas atividades"]},
+  {t:"3.3 Ajuda os demais colaboradores/áreas da empresa",o:["Não ajuda","Ajuda somente quando solicitado","Ajuda","Ajuda e incentiva os demais"]},
+  {t:"3.4 Propõe melhorias com foco no negócio",o:["Não propõe ou resiste a novas ideias","Raramente propõe","Propõe","Propõe e incentiva a equipe"]}
+ ]},
+ {n:4,nome:"Produtividade",desc:"Realiza a quantidade de trabalho esperada, respeitando prazos e prioridades.",q:[
+  {t:"4.1 Realiza a quantidade de trabalho estabelecida",o:["Não realiza o volume mínimo esperado","Realiza parcialmente o volume esperado","Realiza o volume esperado de forma adequada","Realiza acima do esperado, mantendo a qualidade"]},
+  {t:"4.2 Cumpre prazos estabelecidos",o:["Não cumpre os prazos definidos","Cumpre prazos com frequência irregular","Cumpre os prazos conforme estabelecido","Além de cumprir, antecipa entregas quando possível"]},
+  {t:"4.3 Organiza suas tarefas priorizando demandas",o:["Não organiza, prejudicando as entregas","Organiza com dificuldade, precisa de orientação","Organiza adequadamente conforme prioridades","Organiza com excelência, de forma estratégica"]},
+  {t:"4.4 Mantém constância de entrega ao longo do tempo",o:["Quedas frequentes de rendimento","Oscila na produtividade ao longo do tempo","Mantém constância nas entregas","Mantém alto nível de produtividade continuamente"]}
+ ]},
+ {n:5,nome:"Qualidade",desc:"Executa dentro dos padrões exigidos, com atenção aos detalhes e evitando retrabalho.",q:[
+  {t:"5.1 Executa o trabalho dentro do padrão exigido",o:["Não atende ao padrão mínimo","Atende parcialmente ao padrão","Atende ao padrão conforme esperado","Supera o padrão, sendo referência"]},
+  {t:"5.2 Evita retrabalho e desperdícios",o:["Gera retrabalho frequente e desperdícios","Gera retrabalho ocasional por falta de atenção","Executa evitando retrabalho e desperdícios","Previne falhas antes que ocorram"]},
+  {t:"5.3 Demonstra atenção aos detalhes",o:["Não demonstra atenção, gerando falhas","Atenção parcial, deixa passar erros","Atenção adequada aos detalhes","Alto nível de atenção, prevenindo inconsistências"]},
+  {t:"5.4 Mantém padrão de excelência nas entregas",o:["Falhas frequentes de qualidade","Qualidade irregular","Qualidade constante","Excelência contínua, sendo exemplo"]}
+ ]},
+ {n:6,nome:"Relac. Interpessoal",desc:"Estabelece relações profissionais saudáveis que favorecem o trabalho em equipe.",q:[
+  {t:"6.1 Mantém bom relacionamento com colegas e clientes",o:["Dificuldades frequentes de relacionamento","Relaciona-se com dificuldade, gera desconfortos","Mantém bom relacionamento profissional","Referência positiva no relacionamento"]},
+  {t:"6.2 Respeita opiniões diferentes e trabalha em equipe",o:["Não respeita divergências e evita equipe","Respeita parcialmente, com resistência","Respeita e trabalha bem em equipe","Incentiva a participação e o trabalho em equipe"]},
+  {t:"6.3 Lida adequadamente com conflitos",o:["Gera ou intensifica conflitos","Evita conflitos, mas não sabe lidar","Lida com equilíbrio e controle emocional","Media conflitos com maturidade e bom senso"]},
+  {t:"6.4 Contribui para um ambiente colaborativo",o:["Não contribui e prejudica o ambiente","Contribui pouco para a colaboração","Contribui para um ambiente colaborativo","Estimula e fortalece a colaboração"]}
+ ]},
+ {n:7,nome:"Responsabilidade",desc:"Cumpre normas, compromissos e demonstra postura profissional.",q:[
+  {t:"7.1 Cumpre horário de trabalho (início, intervalo, fim)",o:["Não cumpre horários e compromissos","Cumpre com frequência irregular","Cumpre conforme esperado","Cumpre rigorosamente e demonstra comprometimento"]},
+  {t:"7.2 Cumpre normas, procedimentos e código de ética",o:["Descumpre normas e procedimentos","Cumpre parcialmente, precisa de orientação","Cumpre conforme estabelecido","Cumpre e é exemplo de postura ética"]},
+  {t:"7.3 Demonstra comprometimento com suas obrigações",o:["Desinteresse pelas responsabilidades","Cumpre apenas quando cobrado","Comprometimento com suas funções","Alto nível de comprometimento e responsabilidade"]},
+  {t:"7.4 Possui disponibilidade e flexibilidade quando necessário",o:["Não demonstra disponibilidade","Resistência quando solicitado","Disponibilidade quando necessário","Flexibilidade e postura colaborativa"]}
+ ]},
+ {n:8,nome:"Amb. de Trabalho",desc:"Zela pela organização e boa imagem do ambiente profissional.",q:[
+  {t:"8.1 Mantém seu espaço limpo e organizado",o:["Não mantém organização do espaço","Mantém com dificuldade","Mantém organizado conforme esperado","Mantém e é exemplo de organização"]},
+  {t:"8.2 Zela pelos ambientes comuns (mesa, banheiro, cozinha)",o:["Não zela pelos ambientes comuns","Zela parcialmente","Zela conforme esperado","Zela e orienta os demais"]},
+  {t:"8.3 Contribui para a boa imagem do local de trabalho",o:["Prejudica a imagem do ambiente","Contribui pouco para a boa imagem","Contribui adequadamente","Contribui ativamente para a boa imagem"]},
+  {t:"8.4 Incentiva a organização do ambiente",o:["Não incentiva e desorganiza","Não incentiva, mas mantém o mínimo","Incentiva a organização","Estimula os demais e mantém padrão elevado"]}
+ ]},
+ {n:9,nome:"Foco no Cliente",desc:"Atua buscando entender e atender as necessidades do cliente.",q:[
+  {t:"9.1 Busca compreender as necessidades do cliente",o:["Não busca compreender","Busca raramente","Busca e compreende adequadamente","Compreende e antecipa necessidades"]},
+  {t:"9.2 Atende adequadamente as demandas",o:["Não atende adequadamente","Atende parcialmente","Atende conforme esperado","Atende e supera as expectativas"]},
+  {t:"9.3 Demonstra postura cordial e profissional",o:["Postura inadequada","Cordialidade com dificuldade","Postura profissional adequada","Referência em postura profissional"]},
+  {t:"9.4 Propõe soluções que agregam valor ao cliente",o:["Não propõe soluções","Propõe raramente","Propõe soluções adequadas","Propõe soluções estratégicas e diferenciadas"]}
+ ]},
+ {n:10,nome:"Negociação",desc:"Conduz negociações de forma equilibrada e eficaz.",q:[
+  {t:"10.1 Apresenta argumentos claros e coerentes",o:["Argumentos inconsistentes","Argumentos com dificuldade","Argumentos claros","Argumentos com forte poder de convencimento"]},
+  {t:"10.2 Demonstra flexibilidade nas negociações",o:["Não demonstra flexibilidade","Pouca flexibilidade","Flexibilidade adequada","Flexibilidade estratégica"]},
+  {t:"10.3 Busca soluções de ganho mútuo",o:["Não busca soluções equilibradas","Busca com dificuldade","Soluções adequadas para as partes","Soluções estratégicas de ganho mútuo"]},
+  {t:"10.4 Conduz negociações com segurança e equilíbrio",o:["Insegurança na condução","Conduz com dificuldade","Conduz com segurança","Conduz com excelência, sendo referência"]}
+ ]}
+];
+const PONTOS=[4,6,8,10];
+const TOTAL_Q=COMPETENCIAS.reduce(function(s,c){return s+c.q.length;},0);
+// Faixas de classificação (escala 4–10) — editáveis
+const FAIXAS=[
+ {min:9.0,key:"Excelente",cor:"gn",classe:"av-b-ok",narr:"Supera as expectativas da função, apresenta alta consistência e contribui positivamente para os resultados da equipe.",elig:"✅ Elegível para reajuste conforme política da empresa.",eligClass:"av-b-ok"},
+ {min:7.5,key:"Bom",cor:"az",classe:"av-b-blue",narr:"Atende às expectativas da função com desempenho consistente. Possui pontos de melhoria, mas mantém entrega adequada.",elig:"🔎 Pode ser elegível conforme política interna e tempo na função.",eligClass:"av-b-blue"},
+ {min:6.0,key:"Regular",cor:"am",classe:"av-b-warn",narr:"Atende parcialmente às expectativas, com inconsistências em algumas competências. Demonstra potencial de evolução com acompanhamento adequado.",elig:"❌ Não elegível no momento (reavaliar após evolução).",eligClass:"av-b-warn"},
+ {min:0,key:"Insatisfatório",cor:"vm",classe:"av-b-late",narr:"Desempenho abaixo do esperado para a função. Apresenta lacunas relevantes nas competências avaliadas e necessita plano estruturado de desenvolvimento.",elig:"❌ Não elegível para reajuste.",eligClass:"av-b-late"}
+];
+function classify(m){for(var i=0;i<FAIXAS.length;i++)if(m>=FAIXAS[i].min)return FAIXAS[i];return FAIXAS[FAIXAS.length-1];}
+const COR={gn:"var(--gn)",az:"var(--az3)",am:"#D9A400",vm:"var(--vm)"};
+
+var colabs=[], avals=[], scores={};
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function fmt(d){if(!d)return"—";var p=String(d).slice(0,10).split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:d;}
+function initials(n){return String(n||"?").split(" ").filter(Boolean).slice(0,2).map(function(x){return x[0];}).join("").toUpperCase();}
+function addMonths(dstr,m){var d=new Date(dstr+"T00:00:00");d.setMonth(d.getMonth()+(+m||12));return d.toISOString().slice(0,10);}
+function today(){return new Date().toISOString().slice(0,10);}
+function lastEval(cid){var l=avals.filter(function(a){return a.colaborador_id===cid;}).sort(function(a,b){return a.data_avaliacao<b.data_avaliacao?1:-1;});return l[0]||null;}
+function prazoInfo(c){
+  var last=lastEval(c.id);
+  if(!last)return{status:"pendente",label:"Avaliação pendente",cls:"av-b-none"};
+  var prox=addMonths(String(last.data_avaliacao).slice(0,10),c.periodicidade||12);
+  var dias=Math.round((new Date(prox)-new Date(today()))/86400000);
+  if(dias<0)return{status:"vencida",label:"Reavaliação vencida",cls:"av-b-late"};
+  if(dias<=30)return{status:"proxima",label:"Vence em "+dias+" dia"+(dias===1?"":"s"),cls:"av-b-warn"};
+  return{status:"emdia",label:"Em dia · próx. "+fmt(prox),cls:"av-b-ok"};
+}
+
+// ── sidebar (injeta na tela do cliente, sem alterar buildSidebar) ──
+function injectNav(){
+  var host=document.getElementById('sb-nav-dynamic');
+  if(!host||document.getElementById('av-nav-colab'))return;
+  var g=document.createElement('div');
+  g.innerHTML='<div class="sb-group-lbl">Gestão de Pessoas</div>'+
+    '<div class="nav-item" id="av-nav-colab" data-page="colaboradores" onclick="goPage(\'colaboradores\',this)"><span class="nav-icon">👥</span> Colaboradores</div>'+
+    '<div class="nav-item" id="av-nav-aval" data-page="avaliacoes" onclick="goPage(\'avaliacoes\',this)"><span class="nav-icon">📝</span> Avaliações</div>';
+  while(g.firstChild)host.appendChild(g.firstChild);
+}
+function go(id){var el=document.getElementById(id==='avaliacoes'?'av-nav-aval':'av-nav-colab');goPage(id,el);}
+
+// ── carga inicial (chamada a partir de loadClientData) ──
+async function load(){
+  try{
+    if(typeof CUR==='undefined'||!CUR)return;
+    injectNav();
+    var cr=await sb.from('colaboradores').select('*').eq('cliente_id',CUR.id).order('nome');
+    var ar=await sb.from('avaliacoes').select('*').eq('cliente_id',CUR.id).order('data_avaliacao');
+    if(cr.error||ar.error){
+      var msg=(cr.error&&cr.error.message)||(ar.error&&ar.error.message)||'';
+      colabs=[];avals=[];
+      var grid=document.getElementById('av-colab-grid');
+      if(grid)grid.innerHTML='<div class="av-empty">Módulo ainda não inicializado no banco.<br><span style="font-size:12px">Rode <b>schema_portal_nr1.sql</b> no Supabase para criar as tabelas.</span></div>';
+      console.warn('[AV] tabelas ausentes:',msg);
+      return;
+    }
+    colabs=cr.data||[];avals=ar.data||[];
+    renderColaboradores();
+  }catch(e){console.warn('[AV] load falhou',e);}
+}
+
+// ── COLABORADORES ──
+function renderColaboradores(){
+  var late=colabs.filter(function(c){return prazoInfo(c).status==="vencida";}).length;
+  var soon=colabs.filter(function(c){return prazoInfo(c).status==="proxima";}).length;
+  var pend=colabs.filter(function(c){return prazoInfo(c).status==="pendente";}).length;
+  var a=document.getElementById('av-alert');
+  if(a)a.innerHTML=
+    '<div class="av-mini"><div class="n" style="color:var(--az1)">'+colabs.length+'</div><div class="l">Colaboradores</div></div>'+
+    '<div class="av-mini"><div class="n" style="color:var(--vm)">'+late+'</div><div class="l">Reavaliações vencidas</div></div>'+
+    '<div class="av-mini"><div class="n" style="color:var(--am)">'+soon+'</div><div class="l">Vencem em 30 dias</div></div>'+
+    '<div class="av-mini"><div class="n" style="color:var(--mt2)">'+pend+'</div><div class="l">Nunca avaliados</div></div>';
+  var g=document.getElementById('av-colab-grid');
+  if(!g)return;
+  if(!colabs.length){g.innerHTML='<div class="av-empty">Nenhum colaborador cadastrado ainda.<br><span style="font-size:12px">Clique em “+ Novo colaborador” para começar.</span></div>';return;}
+  g.innerHTML=colabs.map(function(c){
+    var p=prazoInfo(c),last=lastEval(c.id),nH=avals.filter(function(a){return a.colaborador_id===c.id;}).length;
+    return '<div class="av-card">'+
+      '<div class="av-ctop"><div class="av-avatar">'+initials(c.nome)+'</div>'+
+        '<div style="flex:1"><div class="av-cname">'+esc(c.nome)+'</div><div class="av-crole">'+esc(c.cargo||"—")+(c.setor?' · '+esc(c.setor):'')+'</div></div>'+
+        '<span class="av-badge '+p.cls+'"><span class="av-dot"></span>'+p.label+'</span></div>'+
+      '<div class="av-cmeta"><div><b>'+(last?(+last.nota_geral).toFixed(1):"—")+'</b> última nota</div><div><b>'+(last?esc(last.classificacao):"—")+'</b></div><div><b>'+nH+'</b> avaliaç'+(nH===1?'ão':'ões')+'</div></div>'+
+      '<div class="av-cact"><button class="av-btn av-btn-p av-btn-sm" style="flex:1" onclick="AV.startEval(\''+c.id+'\')">Avaliar</button>'+
+        '<button class="av-btn av-btn-o av-btn-sm" onclick="AV.openHist(\''+c.id+'\')" '+(nH?'':'disabled')+'>Histórico</button></div>'+
+    '</div>';
+  }).join("");
+}
+function openColab(){document.getElementById('av-ov-colab').classList.add('open');}
+function closeColab(){document.getElementById('av-ov-colab').classList.remove('open');}
+async function saveColab(){
+  var nome=document.getElementById('av-m-nome').value.trim();
+  if(!nome){alert("Informe o nome.");return;}
+  var payload={cliente_id:CUR.id,nome:nome,
+    cargo:document.getElementById('av-m-cargo').value.trim()||null,
+    setor:document.getElementById('av-m-setor').value.trim()||null,
+    admissao:document.getElementById('av-m-adm').value||null,
+    periodicidade:parseInt(document.getElementById('av-m-per').value,10)||12};
+  var r=await sb.from('colaboradores').insert(payload).select();
+  if(r.error){alert("Erro ao salvar: "+r.error.message);return;}
+  colabs.push(r.data[0]);
+  ["av-m-nome","av-m-cargo","av-m-setor","av-m-adm"].forEach(function(i){document.getElementById(i).value="";});
+  closeColab();renderColaboradores();
+  if(window.showToast)showToast("Colaborador cadastrado.");
+}
+
+// ── AVALIAÇÃO ──
+function fillSelect(sel){
+  var s=document.getElementById('av-f-colab');
+  s.innerHTML='<option value="">Selecione…</option>'+colabs.map(function(c){return '<option value="'+c.id+'"'+(String(c.id)===String(sel)?' selected':'')+'>'+esc(c.nome)+(c.cargo?' — '+esc(c.cargo):'')+'</option>';}).join("");
+}
+function onPickColab(){
+  var id=document.getElementById('av-f-colab').value;
+  var c=colabs.filter(function(x){return String(x.id)===String(id);})[0];
+  document.getElementById('av-f-cargo').value=c?((c.cargo||"—")+(c.setor?" · "+c.setor:"")):"";
+  document.getElementById('av-eval-title').textContent=c?("Avaliação · "+c.nome):"Nova Avaliação de Desempenho";
+}
+function buildForm(){
+  document.getElementById('av-comp-list').innerHTML=COMPETENCIAS.map(function(c,ci){
+    return '<div class="av-comp'+(ci===0?' open':'')+'" id="av-comp-'+c.n+'">'+
+      '<div class="av-chead" onclick="AV.toggle('+c.n+')"><div class="av-cnum">'+c.n+'</div>'+
+        '<div class="av-ctit"><div class="t">'+esc(c.nome)+'</div><div class="d">'+esc(c.desc)+'</div></div>'+
+        '<div class="av-cscore" id="av-cs-'+c.n+'">—</div>'+
+        '<svg class="av-chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+      '<div class="av-cbody">'+c.q.map(function(q,qi){
+        return '<div class="av-ques"><div class="av-qt">'+esc(q.t)+'</div><div class="av-opts">'+
+          q.o.map(function(txt,oi){return '<div class="av-opt" id="av-opt-'+c.n+'-'+qi+'-'+oi+'" onclick="AV.pick('+c.n+','+qi+','+oi+')"><div class="av-pt">'+PONTOS[oi]+'</div><div class="av-otx">'+esc(txt)+'</div></div>';}).join("")+
+          '</div></div>';
+      }).join("")+'</div></div>';
+  }).join("");
+}
+function toggle(n){document.getElementById('av-comp-'+n).classList.toggle('open');}
+function answered(cn){var a=0;for(var i=0;i<4;i++)if(scores[cn+"."+i]!=null)a++;return a;}
+function media(cn){var s=0,n=0;for(var i=0;i<4;i++){if(scores[cn+"."+i]!=null){s+=scores[cn+"."+i];n++;}}return n?s/n:null;}
+function pick(cn,qi,oi){
+  scores[cn+"."+qi]=PONTOS[oi];
+  for(var o=0;o<4;o++){var el=document.getElementById('av-opt-'+cn+'-'+qi+'-'+o);if(el)el.classList.toggle('sel',o===oi);}
+  recalc();
+  if(answered(cn)===4){var nx=document.getElementById('av-comp-'+(cn+1));if(nx&&!nx.classList.contains('open')){document.getElementById('av-comp-'+cn).classList.remove('open');nx.classList.add('open');nx.scrollIntoView({behavior:"smooth",block:"center"});}}
+}
+function recalc(){
+  var done=0,comps=[];
+  COMPETENCIAS.forEach(function(c){
+    var a=answered(c.n);done+=a;var m=media(c.n);
+    var el=document.getElementById('av-cs-'+c.n);
+    if(el){if(a===4){el.textContent=m.toFixed(1);el.classList.add('done');}else{el.textContent=a?a+"/4":"—";el.classList.remove('done');}}
+    comps.push({n:c.n,nome:c.nome,media:m});
+  });
+  document.getElementById('av-p-prog').textContent=done+" de "+TOTAL_Q+" quesitos avaliados";
+  var full=comps.filter(function(c){return c.media!=null;});
+  var geral=full.length?full.reduce(function(s,c){return s+c.media;},0)/full.length:null;
+  document.getElementById('av-p-score').innerHTML=(geral==null?"—":geral.toFixed(1))+'<small>/10</small>';
+  var cl=document.getElementById('av-p-classif'),narr=document.getElementById('av-p-narr'),elig=document.getElementById('av-p-elig');
+  if(done===TOTAL_Q&&geral!=null){
+    var f=classify(geral);
+    cl.innerHTML='<span class="av-badge '+f.classe+'" style="font-size:13px;padding:5px 14px"><span class="av-dot"></span>'+f.key+'</span>';
+    narr.textContent=f.narr;elig.className="av-elig "+f.eligClass;elig.textContent=f.elig;
+  }else{
+    cl.innerHTML='<span class="av-badge av-b-none">'+(done?'Avaliação em andamento':'Aguardando')+'</span>';
+    narr.textContent="Preencha todos os quesitos para ver a análise final e a elegibilidade.";
+    elig.className="av-elig av-b-none";elig.textContent="Aguardando avaliação completa";
+  }
+  drawBars(comps);drawRadar('av-radar',comps,true);
+}
+function drawBars(comps){
+  document.getElementById('av-p-bars').innerHTML=comps.map(function(c){
+    var v=c.media,pct=v!=null?(v/10*100):0,cor=v!=null?COR[classify(v).cor]:"var(--cr2)";
+    return '<div class="av-cb"><div class="lbl" title="'+esc(c.nome)+'">'+esc(c.nome)+'</div><div class="track"><div class="fill" style="width:'+pct+'%;background:'+cor+'"></div></div><div class="v">'+(v!=null?v.toFixed(1):"–")+'</div></div>';
+  }).join("");
+}
+function radarSVG(comps,size,live){
+  var cx=size/2,cy=size/2,R=size/2-32,N=comps.length;
+  function ang(i){return -Math.PI/2+i*2*Math.PI/N;}
+  function pt(i,r){return [cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];}
+  var g="";
+  [2,4,6,8,10].forEach(function(ring){var r=R*ring/10;g+='<polygon points="'+comps.map(function(_,i){return pt(i,r).join(",");}).join(" ")+'" fill="none" stroke="#D0D6E8" stroke-width="1"/>';});
+  comps.forEach(function(_,i){var e=pt(i,R);g+='<line x1="'+cx+'" y1="'+cy+'" x2="'+e[0]+'" y2="'+e[1]+'" stroke="#D0D6E8" stroke-width="1"/>';});
+  if(comps.some(function(c){return c.media!=null;})){
+    g+='<polygon points="'+comps.map(function(c,i){return pt(i,R*((c.media||0)/10)).join(",");}).join(" ")+'" fill="rgba(43,79,140,.18)" stroke="#2B4F8C" stroke-width="2"/>';
+    comps.forEach(function(c,i){if(c.media!=null){var e=pt(i,R*(c.media/10));g+='<circle cx="'+e[0]+'" cy="'+e[1]+'" r="2.6" fill="#1B3A6B"/>';}});
+  }
+  comps.forEach(function(c,i){var e=pt(i,R+13);g+='<text x="'+e[0]+'" y="'+e[1]+'" font-size="8" fill="#5A6A8A" text-anchor="middle" dominant-baseline="middle" font-family="Nunito Sans">'+c.n+'</text>';});
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+g+'</svg>';
+}
+function drawRadar(hostId,comps,live){var h=document.getElementById(hostId);if(h)h.innerHTML=radarSVG(comps,244,live);}
+
+function reset(){scores={};buildForm();recalc();document.getElementById('av-f-avaliador').value="";document.getElementById('av-f-obs').value="";document.getElementById('av-f-data').value=today();}
+function startEval(cid){reset();fillSelect(cid||"");onPickColab();go('avaliacoes');}
+function startBlank(){reset();fillSelect("");onPickColab();go('avaliacoes');}
+
+async function save(){
+  var id=document.getElementById('av-f-colab').value;
+  if(!id){alert("Selecione o colaborador avaliado.");return;}
+  var done=0;COMPETENCIAS.forEach(function(c){done+=answered(c.n);});
+  if(done<TOTAL_Q){alert("Faltam "+(TOTAL_Q-done)+" quesito(s) para concluir a avaliação.");return;}
+  var comps=COMPETENCIAS.map(function(c){return{n:c.n,nome:c.nome,media:+media(c.n).toFixed(2)};});
+  var geral=+(comps.reduce(function(s,c){return s+c.media;},0)/comps.length).toFixed(1);
+  var c=colabs.filter(function(x){return String(x.id)===String(id);})[0];
+  var data=document.getElementById('av-f-data').value||today();
+  var payload={cliente_id:CUR.id,colaborador_id:id,
+    avaliador:document.getElementById('av-f-avaliador').value.trim()||null,
+    data_avaliacao:data,respostas:scores,competencias:comps,
+    nota_geral:geral,classificacao:classify(geral).key,
+    observacao:document.getElementById('av-f-obs').value.trim()||null,
+    proxima_avaliacao:addMonths(data,(c&&c.periodicidade)||12)};
+  var r=await sb.from('avaliacoes').insert(payload).select();
+  if(r.error){alert("Erro ao salvar: "+r.error.message);return;}
+  avals.push(r.data[0]);
+  if(window.showToast)showToast("Avaliação salva.");
+  renderColaboradores();go('colaboradores');
+}
+
+// ── HISTÓRICO ──
+function openHist(cid){
+  var c=colabs.filter(function(x){return String(x.id)===String(cid);})[0];
+  document.getElementById('av-hist-title').textContent="Histórico · "+(c?c.nome:"");
+  var evs=avals.filter(function(a){return String(a.colaborador_id)===String(cid);}).sort(function(a,b){return a.data_avaliacao<b.data_avaliacao?-1:1;});
+  var body=document.getElementById('av-hist-body');
+  if(!evs.length){body.innerHTML='<tr><td colspan="6" class="av-empty">Nenhuma avaliação registrada.</td></tr>';}
+  else body.innerHTML=evs.map(function(e,i){
+    var prev=i>0?+evs[i-1].nota_geral:null,delta="—",dc="av-eq";
+    if(prev!=null){var d=+((+e.nota_geral)-prev).toFixed(1);delta=(d>0?"▲ +":d<0?"▼ ":"● ")+d;dc=d>0?"av-up":d<0?"av-dn":"av-eq";}
+    var f=FAIXAS.filter(function(x){return x.key===e.classificacao;})[0]||FAIXAS[0];
+    return '<tr><td>'+fmt(e.data_avaliacao)+'</td><td>'+esc(e.avaliador||"—")+'</td>'+
+      '<td style="font-family:Nunito;font-weight:800;color:var(--az1)">'+(+e.nota_geral).toFixed(1)+'</td>'+
+      '<td><span class="av-badge '+f.classe+'"><span class="av-dot"></span>'+esc(e.classificacao)+'</span></td>'+
+      '<td class="'+dc+'">'+delta+'</td>'+
+      '<td><button class="av-btn av-btn-ghost av-btn-sm" onclick="AV.report(\''+e.id+'\')">Relatório →</button></td></tr>';
+  }).join("");
+  document.getElementById('av-ov-hist').classList.add('open');
+}
+function closeHist(){document.getElementById('av-ov-hist').classList.remove('open');}
+
+// ── RELATÓRIO (nova janela para impressão/PDF) ──
+function currentObj(){
+  var id=document.getElementById('av-f-colab').value;
+  var comps=COMPETENCIAS.map(function(c){return{n:c.n,nome:c.nome,media:media(c.n)};});
+  var full=comps.filter(function(c){return c.media!=null;});
+  var geral=full.length?+(full.reduce(function(s,c){return s+c.media;},0)/full.length).toFixed(1):null;
+  return{colab:colabs.filter(function(x){return String(x.id)===String(id);})[0],avaliador:document.getElementById('av-f-avaliador').value,data:document.getElementById('av-f-data').value||today(),comps:comps,nota:geral,classif:geral!=null?classify(geral).key:"—",obs:document.getElementById('av-f-obs').value};
+}
+function print(){
+  var done=0;COMPETENCIAS.forEach(function(c){done+=answered(c.n);});
+  if(done<TOTAL_Q){alert("Conclua a avaliação antes de gerar o relatório.");return;}
+  openReport(currentObj());
+}
+function report(evId){
+  var e=avals.filter(function(a){return String(a.id)===String(evId);})[0];if(!e)return;
+  openReport({colab:colabs.filter(function(x){return String(x.id)===String(e.colaborador_id);})[0],avaliador:e.avaliador,data:e.data_avaliacao,comps:e.competencias,nota:+e.nota_geral,classif:e.classificacao,obs:e.observacao});
+}
+function openReport(o){
+  var f=FAIXAS.filter(function(x){return x.key===o.classif;})[0]||FAIXAS[0];
+  var rows=o.comps.map(function(c){var cor=c.media!=null?COR[classify(c.media).cor]:"#8E9DBF";return '<tr><td>'+c.n+'</td><td>'+esc(c.nome)+'</td><td style="text-align:right;font-weight:800;color:'+cor+'">'+(c.media!=null?(+c.media).toFixed(1):"—")+'</td></tr>';}).join("");
+  var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Avaliação de Desempenho</title>'+
+    '<style>*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{color:#1A2640;padding:28px 34px}'+
+    '.h{display:flex;justify-content:space-between;border-bottom:2px solid #1B3A6B;padding-bottom:12px;margin-bottom:18px}'+
+    '.t{font-size:20px;font-weight:800;color:#1B3A6B}.s{color:#5A6A8A;font-size:12px}'+
+    '.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:13px;margin-bottom:16px}.k{color:#5A6A8A}'+
+    '.two{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:center;margin-bottom:14px}'+
+    '.big{font-size:42px;font-weight:800;color:#1B3A6B}.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800}'+
+    '.narr{font-size:12.5px;color:#5A6A8A;background:#F6F7FA;border-left:3px solid #3D6BAF;padding:10px 12px;border-radius:6px;margin-top:10px}'+
+    '.elig{font-size:12.5px;font-weight:700;padding:9px 12px;border-radius:6px;margin-top:6px}'+
+    'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}th,td{text-align:left;padding:6px 9px;border-bottom:1px solid #E4E8F3}th{font-size:11px;color:#5A6A8A;text-transform:uppercase}'+
+    '.sig{margin-top:34px;display:flex;gap:56px}.sig>div{flex:1;border-top:1px solid #1A2640;padding-top:5px;font-size:12px;color:#5A6A8A;text-align:center}'+
+    '.tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:#8E9DBF;text-transform:uppercase;display:block;margin-bottom:4px}'+
+    '@media print{body{padding:0}}</style></head><body>'+
+    '<div class="h"><div><div class="t">Relatório de Avaliação de Desempenho</div><div class="s">Evolue · Treinamento e Desenvolvimento</div></div></div>'+
+    '<div class="grid"><div><span class="k">Avaliado:</span> <b>'+esc(o.colab?o.colab.nome:"—")+'</b></div>'+
+      '<div><span class="k">Cargo:</span> '+esc(o.colab?((o.colab.cargo||"—")+(o.colab.setor?" · "+o.colab.setor:"")):"—")+'</div>'+
+      '<div><span class="k">Avaliador:</span> '+esc(o.avaliador||"—")+'</div><div><span class="k">Data:</span> '+fmt(o.data)+'</div></div>'+
+    '<div class="two"><div><div style="display:flex;align-items:baseline;gap:12px"><div class="big">'+(o.nota!=null?(+o.nota).toFixed(1):"—")+'<span style="font-size:17px;color:#8E9DBF">/10</span></div>'+
+      '<span class="badge" style="background:'+bg(f.cor)+';color:'+fg(f.cor)+'">'+esc(o.classif)+'</span></div>'+
+      '<div class="narr">'+esc(f.narr)+'</div><div class="elig" style="background:'+bg(f.cor)+';color:'+fg(f.cor)+'"><span class="tag">Elegibilidade a reajuste (uso interno)</span>'+esc(f.elig)+'</div></div>'+
+      '<div style="text-align:center">'+radarSVG(o.comps,220,false)+'</div></div>'+
+    '<table><thead><tr><th>#</th><th>Competência</th><th style="text-align:right">Média</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    (o.obs?'<div style="margin-top:16px"><span class="tag">Observação geral</span><div style="font-size:13px;background:#F6F7FA;padding:11px 13px;border-radius:6px">'+esc(o.obs)+'</div></div>':'')+
+    '<div class="sig"><div>Assinatura do avaliador</div><div>Assinatura do avaliado</div></div>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print();},250);}<\/script></body></html>';
+  var w=window.open('','_blank');
+  if(!w){alert("Permita pop-ups para gerar o relatório.");return;}
+  w.document.open();w.document.write(html);w.document.close();
+}
+function bg(c){return{gn:"#E1F5EE",az:"#EBF1FA",am:"#FFF3CD",vm:"#FCEBEB"}[c];}
+function fg(c){return{gn:"#0F6E56",az:"#2B4F8C",am:"#8A6400",vm:"#A32D2D"}[c];}
+
+function openBulk(){document.getElementById('av-bulk-txt').value='';document.getElementById('av-bulk-per').value='12';document.getElementById('av-bulk-prev').innerHTML='';document.getElementById('av-ov-bulk').classList.add('open');}
+function closeBulk(){document.getElementById('av-ov-bulk').classList.remove('open');}
+function normDate(s){s=(s||'').trim();if(!s)return null;var m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;return null;}
+function parseBulk(){
+  var perDef=parseInt(document.getElementById('av-bulk-per').value,10)||12;
+  var out=[];
+  document.getElementById('av-bulk-txt').value.split(/\r?\n/).forEach(function(ln){
+    ln=ln.trim(); if(!ln)return;
+    var parts=ln.split(/\s*[;\t]\s*/); if(parts.length===1)parts=ln.split(/\s*,\s*/);
+    var nome=(parts[0]||'').trim(); if(!nome)return;
+    out.push({nome:nome,cargo:(parts[1]||'').trim()||null,setor:(parts[2]||'').trim()||null,admissao:normDate(parts[3]),periodicidade:parseInt(parts[4],10)||perDef});
+  });
+  return out;
+}
+function previewBulk(){
+  var rows=parseBulk(),p=document.getElementById('av-bulk-prev');
+  if(!rows.length){p.innerHTML='<span style="color:var(--mt2);font-size:12px">Nada reconhecido ainda.</span>';return;}
+  p.innerHTML='<div style="font-size:12px;color:var(--mt);margin-bottom:6px"><b>'+rows.length+'</b> colaborador(es) reconhecido(s):</div>'+
+    '<table class="av-htbl"><thead><tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Períod.</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td>'+esc(r.nome)+'</td><td>'+esc(r.cargo||'—')+'</td><td>'+esc(r.setor||'—')+'</td><td>'+r.periodicidade+'m</td></tr>';}).join('')+'</tbody></table>';
+}
+async function saveBulk(){
+  var rows=parseBulk();
+  if(!rows.length){alert('Cole ao menos um colaborador (um por linha).');return;}
+  var payload=rows.map(function(r){return {cliente_id:CUR.id,nome:r.nome,cargo:r.cargo,setor:r.setor,admissao:r.admissao,periodicidade:r.periodicidade};});
+  var r=await sb.from('colaboradores').insert(payload).select();
+  if(r.error){alert('Erro ao importar: '+r.error.message);return;}
+  colabs=colabs.concat(r.data||[]);
+  closeBulk();renderColaboradores();
+  if(window.showToast)showToast(rows.length+' colaborador(es) importado(s).');
+}
+
+return {load:load,go:go,openColab:openColab,closeColab:closeColab,saveColab:saveColab,
+  startEval:startEval,startBlank:startBlank,onPickColab:onPickColab,toggle:toggle,pick:pick,
+  save:save,openHist:openHist,closeHist:closeHist,print:print,report:report,render:renderColaboradores,openBulk:openBulk,closeBulk:closeBulk,previewBulk:previewBulk,saveBulk:saveBulk};
+})();
+
 </script>
 </body>
 </html>
