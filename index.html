@@ -851,6 +851,17 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
         <div id="cl-client"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
       </div>
 
+      <!-- CENTRAL NR-1 (cliente) -->
+      <div class="page" id="page-central">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title">Central NR-1</div>
+            <div class="stage-desc">Informativos, campanhas de saúde e orientações sobre a NR-1 e riscos psicossociais.</div>
+          </div>
+        </div>
+        <div id="cn-client"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
+      </div>
+
       <!-- MODAL: novo colaborador -->
       <div class="av-ov" id="av-ov-colab" onclick="if(event.target===this)AV.closeColab()">
         <div class="av-modal" style="max-width:460px">
@@ -925,6 +936,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
       <div class="adm-nav-item" onclick="admPage('objetivos',this)">🎯 Objetivos / Diagnóstico</div>
       <div class="adm-nav-item" onclick="admPage('clima',this)">🌡️ Pesquisa de Clima</div>
       <div class="adm-nav-item" onclick="admPage('treinamentos',this)">🎓 Treinamentos</div>
+      <div class="adm-nav-item" onclick="admPage('central',this)">📢 Central NR-1</div>
       <div class="adm-nav-item" onclick="admPage('biblioteca',this)">🗂️ Biblioteca de Arquivos</div>
     </div>
     <div class="adm-content">
@@ -1094,6 +1106,35 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
         <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Treinamentos cadastrados</div>
         <div id="tr-adm-list"></div>
       </div>
+      <div class="adm-page" id="adm-central">
+        <div class="av-card" style="padding:20px 22px;margin-bottom:18px">
+          <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:16px;margin-bottom:6px">Publicar conteúdo (Central NR-1)</div>
+          <div style="font-size:12.5px;color:var(--mt);margin-bottom:14px">Este conteúdo é <b>global</b>: aparece para <b>todos os clientes NR-1</b> de uma vez.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="av-fld"><label>Categoria</label><select id="cn-a-cat">
+              <option value="informativo">Informativos</option>
+              <option value="campanha">Campanhas de Saúde</option>
+              <option value="direitos">Direitos e Canais</option>
+              <option value="cartilha">Cartilhas</option>
+            </select></div>
+            <div class="av-fld"><label>Título</label><input id="cn-a-titulo" placeholder="Ex.: Outubro Rosa — Prevenção"></div>
+          </div>
+          <div class="av-fld" style="margin-top:12px"><label>Descrição</label><textarea id="cn-a-desc" rows="2" placeholder="Resumo curto do conteúdo"></textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 0.5fr;gap:14px;margin-top:12px">
+            <div class="av-fld"><label>Link (opcional)</label><input id="cn-a-url" placeholder="https://…"></div>
+            <div class="av-fld"><label>Ordem</label><input id="cn-a-ordem" type="number" min="0" placeholder="1"></div>
+          </div>
+          <div class="av-fld" style="margin-top:12px"><label>Arquivo (opcional — PDF, imagem)</label>
+            <input id="cn-a-file" type="file" accept=".pdf,.png,.jpg,.jpeg,.pptx,.docx" onchange="CN.onFile(this)">
+            <div id="cn-a-fileinfo" style="font-size:12px;color:var(--gnd);margin-top:6px"></div>
+          </div>
+          <div class="av-fld" style="margin-top:8px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600"><input type="checkbox" id="cn-a-ativo" checked style="width:auto;margin:0"> Ativo (visível para os clientes)</label></div>
+          <div style="margin-top:12px"><button class="av-btn av-btn-p" onclick="CN.saveAdmin()">Publicar</button></div>
+        </div>
+        <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Conteúdos publicados</div>
+        <div id="cn-adm-list"></div>
+      </div>
+
 
 
     </div>
@@ -1252,6 +1293,7 @@ const MODELOS = {
         label: 'Programa NR-1',
         itens: [
           { id: 'clima', icon: '🌡️', label: 'Pesquisa de Clima' },
+          { id: 'central', icon: '📢', label: 'Central NR-1' },
           { id: 'relatorio', icon: '📊', label: 'Relatórios de Visita' },
           { id: 'plano', icon: '🧭', label: 'Plano de Ação', badge: 'badge-plano', badgeCls: 'nb-a' },
         ]
@@ -1426,6 +1468,7 @@ async function loadClientData(){
   if(typeof AV!=='undefined') AV.load()
   if(typeof CL!=='undefined') CL.load()
   if(typeof TR!=='undefined') TR.load()
+  if(typeof CN!=='undefined') CN.load()
 }
 
 // ══════════════════════════════════════════════
@@ -1931,6 +1974,7 @@ const PAGES = {
   colaboradores:{t:'Colaboradores',b:'Gestão de pessoas e avaliações'},
   avaliacoes:{t:'Avaliação de Desempenho',b:'Avaliação de competências'},
   clima:{t:'Pesquisa de Clima',b:'Clima organizacional e evolução'},
+  central:{t:'Central NR-1',b:'Informativos, campanhas e orientações'},
 }
 function navShortcut(id){
   // Find and click the matching nav item
@@ -2023,6 +2067,7 @@ function admPage(id,el){
   if(id === 'objetivos') initObjetivosTab()
   if(id === 'clima') CL.loadAdmin()
   if(id === 'treinamentos') TR.loadAdmin()
+  if(id === 'central') CN.loadAdmin()
 }
 
 // ══════════════════════════════════════════════
@@ -4010,6 +4055,112 @@ async function del(id){
 }
 return {load:load,loadAdmin:loadAdmin,saveAdmin:saveAdmin,del:del};
 })();
+
+// ══════════════════════════════════════════════════════════════════════
+//  MÓDULO: Central NR-1  (window.CN)  — conteúdo GLOBAL (sem cliente_id),
+//  aparece para todos os clientes NR-1. Tabela: conteudos_nr1
+// ══════════════════════════════════════════════════════════════════════
+window.CN = (function(){
+var CATS=[
+ {key:'informativo',label:'Informativos'},
+ {key:'campanha',label:'Campanhas de Saúde'},
+ {key:'direitos',label:'Direitos e Canais'},
+ {key:'cartilha',label:'Cartilhas'}
+];
+function catLabel(k){var f=CATS.filter(function(c){return c.key===k;})[0];return f?f.label:(k||'Geral');}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+var itens=[];
+
+async function load(){
+  try{
+    if(typeof CUR==='undefined'||!CUR)return;
+    var r=await sb.from('conteudos_nr1').select('*').eq('ativo',true).order('categoria').order('ordem',{ascending:true});
+    if(r.error){var h=document.getElementById('cn-client');if(h)h.innerHTML='<div class="av-empty">Central NR-1 ainda não inicializada.<br><span style="font-size:12px">Rode <b>conteudos_nr1.sql</b> no Supabase.</span></div>';return;}
+    itens=r.data||[];renderClient();
+  }catch(e){console.warn('[CN] load',e);}
+}
+function renderClient(){
+  var h=document.getElementById('cn-client'); if(!h)return;
+  if(!itens.length){h.innerHTML='<div class="av-empty">Nenhum conteúdo publicado ainda.</div>';return;}
+  var html='';
+  CATS.forEach(function(cat){
+    var list=itens.filter(function(x){return x.categoria===cat.key;});
+    if(!list.length)return;
+    html+='<div style="font-family:Nunito;font-weight:800;color:var(--az1);font-size:15px;margin:18px 0 10px">'+cat.label+'</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">';
+    html+=list.map(function(t){
+      var link=(t.url&&t.url!=='#')?'<a href="'+esc(t.url)+'" target="_blank" rel="noopener" class="av-btn av-btn-o av-btn-sm" style="text-decoration:none;margin-top:10px">📄 Abrir</a>':'';
+      return '<div class="av-card" style="padding:16px 18px;display:flex;flex-direction:column">'+
+        '<div style="font-family:Nunito;font-weight:800;font-size:14.5px;color:var(--tx)">'+esc(t.titulo)+'</div>'+
+        (t.descricao?'<div style="font-size:12.5px;color:var(--mt);margin-top:5px;flex:1">'+esc(t.descricao)+'</div>':'<div style="flex:1"></div>')+
+        link+'</div>';
+    }).join('');
+    html+='</div>';
+  });
+  // categorias fora da lista padrão
+  var outras={};itens.forEach(function(x){if(!CATS.filter(function(c){return c.key===x.categoria;}).length)(outras[x.categoria]=outras[x.categoria]||[]).push(x);});
+  Object.keys(outras).forEach(function(k){
+    html+='<div style="font-family:Nunito;font-weight:800;color:var(--az1);font-size:15px;margin:18px 0 10px">'+esc(catLabel(k))+'</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">'+
+      outras[k].map(function(t){var link=(t.url&&t.url!=='#')?'<a href="'+esc(t.url)+'" target="_blank" rel="noopener" class="av-btn av-btn-o av-btn-sm" style="text-decoration:none;margin-top:10px">📄 Abrir</a>':'';return '<div class="av-card" style="padding:16px 18px;display:flex;flex-direction:column"><div style="font-family:Nunito;font-weight:800;font-size:14.5px">'+esc(t.titulo)+'</div>'+(t.descricao?'<div style="font-size:12.5px;color:var(--mt);margin-top:5px;flex:1">'+esc(t.descricao)+'</div>':'<div style="flex:1"></div>')+link+'</div>';}).join('')+'</div>';
+  });
+  h.innerHTML=html;
+}
+
+// ───────── ADMIN ─────────
+var _fileUrl='',_fileName='';
+async function loadAdmin(){
+  var box=document.getElementById('cn-adm-list'); if(box)box.innerHTML='<div class="page-loading"><div class="spin"></div>Carregando...</div>';
+  var r=await sb.from('conteudos_nr1').select('*').order('categoria').order('ordem',{ascending:true});
+  if(r.error){if(box)box.innerHTML='<div class="av-empty" style="padding:20px">Rode <b>conteudos_nr1.sql</b> no Supabase para habilitar.</div>';return;}
+  if(box)box.innerHTML=(r.data&&r.data.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+    ['Categoria','Título','Ordem','Status',''].map(function(t){return '<th style="text-align:left;padding:8px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+
+    r.data.map(function(t){return '<tr>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(catLabel(t.categoria))+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.titulo)+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+(t.ordem!=null?t.ordem:'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+(t.ativo?'<span class="av-badge av-b-ok">Ativo</span>':'<span class="av-badge av-b-none">Oculto</span>')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);white-space:nowrap">'+
+        '<button class="av-btn av-btn-ghost av-btn-sm" onclick="CN.toggle(\''+t.id+'\','+(t.ativo?'false':'true')+')">'+(t.ativo?'Ocultar':'Ativar')+'</button>'+
+        '<button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="CN.del(\''+t.id+'\')">Excluir</button></td></tr>';}).join('')+
+    '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhum conteúdo cadastrado ainda.</div>';
+}
+async function onFile(input){
+  var file=input.files&&input.files[0]; if(!file)return;
+  var info=document.getElementById('cn-a-fileinfo'); if(info)info.textContent='Enviando '+file.name+'…';
+  var path='uploads/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var up=await sb.storage.from(BUCKET).upload(path,file,{upsert:true});
+  if(up.error){if(info)info.textContent='Erro no upload: '+up.error.message;return;}
+  var u=sb.storage.from(BUCKET).getPublicUrl(path);
+  _fileUrl=u.data.publicUrl;_fileName=file.name;
+  if(info)info.textContent='✓ '+file.name;
+}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+async function saveAdmin(){
+  var titulo=val('cn-a-titulo'); if(!titulo){alert('Informe o título.');return;}
+  var url=val('cn-a-url')||_fileUrl||null;
+  var payload={categoria:val('cn-a-cat')||'informativo',titulo:titulo,descricao:val('cn-a-desc')||null,
+    ordem:parseInt(val('cn-a-ordem'),10)||0,url:url,
+    ativo:!!(document.getElementById('cn-a-ativo')&&document.getElementById('cn-a-ativo').checked)};
+  var r=await sb.from('conteudos_nr1').insert(payload).select();
+  if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
+  if(window.showToast)showToast('Conteúdo publicado.');
+  ['cn-a-titulo','cn-a-desc','cn-a-ordem','cn-a-url'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  _fileUrl='';_fileName='';var fi=document.getElementById('cn-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cn-a-file');if(fin)fin.value='';
+  loadAdmin();
+}
+async function toggle(id,ativo){
+  var r=await sb.from('conteudos_nr1').update({ativo:ativo}).eq('id',id);
+  if(r.error){alert('Erro: '+r.error.message);return;} loadAdmin();
+}
+async function del(id){
+  if(!confirm('Excluir este conteúdo?'))return;
+  var r=await sb.from('conteudos_nr1').delete().eq('id',id);
+  if(r.error){alert('Erro: '+r.error.message);return;}
+  if(window.showToast)showToast('Conteúdo excluído.'); loadAdmin();
+}
+return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,toggle:toggle,del:del};
+})();
+
 
 
 
