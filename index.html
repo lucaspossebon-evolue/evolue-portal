@@ -845,6 +845,17 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
         </div>
       </div>
 
+      <!-- PESQUISA DE CLIMA (cliente) -->
+      <div class="page" id="page-clima">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title">Pesquisa de Clima</div>
+            <div class="stage-desc">Resultados das pesquisas de clima organizacional e a evolução entre elas.</div>
+          </div>
+        </div>
+        <div id="cl-client"><div class="page-loading"><div class="spin"></div>Carregando...</div></div>
+      </div>
+
       <!-- MODAL: novo colaborador -->
       <div class="av-ov" id="av-ov-colab" onclick="if(event.target===this)AV.closeColab()">
         <div class="av-modal" style="max-width:460px">
@@ -917,6 +928,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
       <div class="adm-nav-item" onclick="admPage('materiais',this)">📁 Materiais</div>
       <div class="adm-nav-item" onclick="admPage('acoes',this)">🧭 Plano de Ação</div>
       <div class="adm-nav-item" onclick="admPage('objetivos',this)">🎯 Objetivos / Diagnóstico</div>
+      <div class="adm-nav-item" onclick="admPage('clima',this)">🌡️ Pesquisa de Clima</div>
       <div class="adm-nav-item" onclick="admPage('biblioteca',this)">🗂️ Biblioteca de Arquivos</div>
     </div>
     <div class="adm-content">
@@ -1034,6 +1046,36 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           <div class="page-loading"><div class="spin"></div>Carregando arquivos...</div>
         </div>
       </div>
+      <div class="adm-page" id="adm-clima">
+        <div class="av-card" style="padding:20px 22px;margin-bottom:18px">
+          <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:16px;margin-bottom:14px">Cadastrar pesquisa de clima</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="av-fld"><label>Cliente</label><select id="cl-a-cliente"><option value="">Selecione o cliente…</option></select></div>
+            <div class="av-fld"><label>Título</label><input id="cl-a-titulo" placeholder="Ex.: Clima 2026 · 1º semestre"></div>
+            <div class="av-fld"><label>Data de referência</label><input id="cl-a-data" type="date"></div>
+            <div style="display:flex;gap:12px">
+              <div class="av-fld" style="flex:1"><label>Respondentes</label><input id="cl-a-resp" type="number" min="0" placeholder="26"></div>
+              <div class="av-fld" style="flex:1"><label>Total colaboradores</label><input id="cl-a-total" type="number" min="0" placeholder="30"></div>
+            </div>
+          </div>
+          <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:13.5px;margin:16px 0 8px">Médias por dimensão (escala 1–5)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="av-fld"><label id="cl-a-dl0">Liderança</label><input id="cl-a-d0" type="number" min="1" max="5" step="0.01" placeholder="4,52"></div>
+            <div class="av-fld"><label id="cl-a-dl1">Organização e Processos</label><input id="cl-a-d1" type="number" min="1" max="5" step="0.01" placeholder="4,37"></div>
+            <div class="av-fld"><label id="cl-a-dl2">Desenvolvimento e Reconhecimento</label><input id="cl-a-d2" type="number" min="1" max="5" step="0.01" placeholder="4,19"></div>
+            <div class="av-fld"><label id="cl-a-dl3">Relacionamento e Ambiente</label><input id="cl-a-d3" type="number" min="1" max="5" step="0.01" placeholder="4,04"></div>
+            <div class="av-fld"><label id="cl-a-dl4">Saúde, Bem-estar e Jornada</label><input id="cl-a-d4" type="number" min="1" max="5" step="0.01" placeholder="3,92"></div>
+          </div>
+          <div class="av-fld" style="margin-top:14px"><label>Arquivo do relatório (PPTX ou PDF)</label>
+            <input id="cl-a-file" type="file" accept=".pptx,.pdf,.docx" onchange="CL.onFile(this)">
+            <div id="cl-a-fileinfo" style="font-size:12px;color:var(--gnd);margin-top:6px"></div>
+          </div>
+          <div style="margin-top:16px"><button class="av-btn av-btn-p" onclick="CL.saveAdmin()">Salvar pesquisa</button></div>
+        </div>
+        <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Pesquisas cadastradas</div>
+        <div id="cl-adm-list"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1189,7 +1231,7 @@ const MODELOS = {
       {
         label: 'Programa NR-1',
         itens: [
-          { id: 'diagnostico', icon: '🔍', label: 'Diagnóstico' },
+          { id: 'clima', icon: '🌡️', label: 'Pesquisa de Clima' },
           { id: 'relatorio', icon: '📊', label: 'Relatórios de Visita' },
           { id: 'riscos', icon: '⚠️', label: 'Relatório de Riscos' },
           { id: 'plano', icon: '🧭', label: 'Plano de Ação', badge: 'badge-plano', badgeCls: 'nb-a' },
@@ -1360,6 +1402,7 @@ async function loadClientData(){
   renderTestes()
   renderDiagnostico()
   if(typeof AV!=='undefined') AV.load()
+  if(typeof CL!=='undefined') CL.load()
 }
 
 // ══════════════════════════════════════════════
@@ -1864,6 +1907,7 @@ const PAGES = {
   docs:{t:'Documentos',b:'Todos os materiais disponíveis'},
   colaboradores:{t:'Colaboradores',b:'Gestão de pessoas e avaliações'},
   avaliacoes:{t:'Avaliação de Desempenho',b:'Avaliação de competências'},
+  clima:{t:'Pesquisa de Clima',b:'Clima organizacional e evolução'},
 }
 function navShortcut(id){
   // Find and click the matching nav item
@@ -1954,6 +1998,7 @@ function admPage(id,el){
   el.classList.add('active')
   if(id === 'biblioteca') loadAdmBiblioteca()
   if(id === 'objetivos') initObjetivosTab()
+  if(id === 'clima') CL.loadAdmin()
 }
 
 // ══════════════════════════════════════════════
@@ -3669,6 +3714,191 @@ return {load:load,go:go,openColab:openColab,closeColab:closeColab,saveColab:save
   startEval:startEval,startBlank:startBlank,onPickColab:onPickColab,toggle:toggle,pick:pick,
   save:save,openHist:openHist,closeHist:closeHist,print:print,report:report,render:renderColaboradores,openBulk:openBulk,closeBulk:closeBulk,previewBulk:previewBulk,saveBulk:saveBulk};
 })();
+
+// ══════════════════════════════════════════════════════════════════════
+//  MÓDULO: Pesquisa de Clima  (window.CL)
+//  Fonte: EvolueClimaAgent — 5 dimensões, escala 1–5, índice = média÷5.
+//  Tabela Supabase: pesquisas_clima (ver clima_alter.sql)
+// ══════════════════════════════════════════════════════════════════════
+window.CL = (function(){
+const DIMS=[
+ {nome:"Liderança",abbr:"Liderança"},
+ {nome:"Organização e Processos",abbr:"Organização"},
+ {nome:"Desenvolvimento e Reconhecimento",abbr:"Desenvolvimento"},
+ {nome:"Relacionamento e Ambiente",abbr:"Relacionamento"},
+ {nome:"Saúde, Bem-estar e Jornada",abbr:"Saúde e Bem-estar"}
+];
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function fmt(d){if(!d)return"—";var p=String(d).slice(0,10).split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:d;}
+function n2(v){return (v==null||isNaN(v))?"—":(+v).toFixed(2).replace('.',',');}
+function corMedia(m){return m>=4.5?"#1D9E75":m>=4.0?"#3D6BAF":m>=3.5?"#D9A400":"#A32D2D";}
+function indiceDe(p){ if(p.indice_geral!=null)return p.indice_geral; if(p.media_geral!=null)return Math.round(p.media_geral/5*100); return null; }
+function mediaDe(p){ if(p.media_geral!=null)return +p.media_geral;
+  var ind=p.indicadores||[]; if(ind.length)return ind.reduce(function(s,x){return s+(+x.media||0);},0)/ind.length; return null; }
+function dimMedia(p,nome){var ind=p.indicadores||[];var f=ind.filter(function(x){return x.dimensao===nome;})[0];return f?+f.media:null;}
+
+var pesquisas=[];
+
+async function load(){
+  try{
+    if(typeof CUR==='undefined'||!CUR)return;
+    var r=await sb.from('pesquisas_clima').select('*').eq('cliente_id',CUR.id).order('data_referencia',{ascending:true});
+    if(r.error){renderClientErr(r.error.message);return;}
+    pesquisas=r.data||[];
+    renderClient();
+  }catch(e){console.warn('[CL] load',e);}
+}
+function renderClientErr(msg){
+  var h=document.getElementById('cl-client'); if(!h)return;
+  h.innerHTML='<div class="av-empty">Módulo de clima ainda não inicializado no banco.<br><span style="font-size:12px">Rode <b>clima_alter.sql</b> no Supabase.</span></div>';
+  console.warn('[CL]',msg);
+}
+
+// ───────────────────────── CLIENTE ─────────────────────────
+function ring(indice,media){
+  var R=54,cx=64,cy=64,C=2*Math.PI*R,frac=(indice||0)/100,cor=corMedia(media||0);
+  return '<svg width="128" height="128" viewBox="0 0 128 128">'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="var(--cr2)" stroke-width="11"/>'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="'+cor+'" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-frac))+'" transform="rotate(-90 '+cx+' '+cy+')"/>'+
+    '<text x="64" y="60" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="30" fill="var(--az1)">'+(indice!=null?indice+'%':'—')+'</text>'+
+    '<text x="64" y="80" text-anchor="middle" font-family="Nunito Sans" font-size="10" fill="var(--mt)">índice de clima</text></svg>';
+}
+function dimBars(p){
+  return DIMS.map(function(d){
+    var m=dimMedia(p,d.nome),pct=m!=null?(m/5*100):0,cor=m!=null?corMedia(m):"var(--cr2)";
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px">'+
+      '<div style="width:130px;color:var(--mt);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(d.nome)+'">'+esc(d.abbr)+'</div>'+
+      '<div style="flex:1;height:9px;background:var(--cr2);border-radius:5px;overflow:hidden"><div style="height:100%;border-radius:5px;width:'+pct+'%;background:'+cor+'"></div></div>'+
+      '<div style="width:34px;text-align:right;font-family:Nunito;font-weight:800;color:var(--tx)">'+(m!=null?n2(m):'–')+'</div></div>';
+  }).join('');
+}
+function comparativo(){
+  if(pesquisas.length<2)return '';
+  var ord=pesquisas.slice().sort(function(a,b){return a.data_referencia<b.data_referencia?-1:1;});
+  var atual=ord[ord.length-1], ant=ord[ord.length-2];
+  // linha de evolução do índice
+  var evo=ord.map(function(p,i){
+    var ind=indiceDe(p),prev=i>0?indiceDe(ord[i-1]):null,delta='';
+    if(prev!=null&&ind!=null){var d=ind-prev;delta=' <span style="font-size:11px;color:'+(d>0?'var(--gnd)':d<0?'var(--vm)':'var(--mt2)')+';font-weight:800">'+(d>0?'▲+'+d:d<0?'▼'+d:'●0')+'</span>';}
+    return '<div style="text-align:center;flex:1"><div style="font-size:10.5px;color:var(--mt)">'+fmt(p.data_referencia)+'</div><div style="font-family:Nunito;font-weight:800;font-size:20px;color:var(--az1)">'+(ind!=null?ind+'%':'—')+'</div>'+delta+'</div>';
+  }).join('<div style="align-self:center;color:var(--mt2)">→</div>');
+  // tabela por dimensão (última vs penúltima)
+  var linhas=DIMS.map(function(d){
+    var a=dimMedia(atual,d.nome),b=dimMedia(ant,d.nome),dl='—',dc='var(--mt2)';
+    if(a!=null&&b!=null){var v=+(a-b).toFixed(2);dl=(v>0?'▲ +':v<0?'▼ ':'● ')+n2(Math.abs(v));dc=v>0?'var(--gnd)':v<0?'var(--vm)':'var(--mt2)';}
+    return '<tr><td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(d.nome)+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);text-align:center;color:var(--mt)">'+(b!=null?n2(b):'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);text-align:center;font-family:Nunito;font-weight:800;color:'+(a!=null?corMedia(a):'var(--mt)')+'">'+(a!=null?n2(a):'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);text-align:center;font-weight:800;color:'+dc+'">'+dl+'</td></tr>';
+  }).join('');
+  return '<div class="av-card" style="padding:18px 20px;margin-top:18px">'+
+    '<div style="font-family:Nunito;font-weight:800;color:var(--az1);font-size:15px;margin-bottom:4px">Comparativo entre pesquisas</div>'+
+    '<div style="font-size:12.5px;color:var(--mt);margin-bottom:14px">Evolução do índice geral de clima e variação por dimensão em relação à onda anterior.</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:16px">'+evo+'</div>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr>'+
+      '<th style="text-align:left;padding:6px 10px;color:var(--mt);font-size:11px;text-transform:uppercase;letter-spacing:.4px">Dimensão</th>'+
+      '<th style="padding:6px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+fmt(ant.data_referencia)+'</th>'+
+      '<th style="padding:6px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+fmt(atual.data_referencia)+'</th>'+
+      '<th style="padding:6px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">Variação</th></tr></thead><tbody>'+linhas+'</tbody></table></div>';
+}
+function arquivosLinks(p){
+  var arqs=p.arquivos||[]; if(!arqs.length&&p.arquivo_url)arqs=[{nome:'Relatório',url:p.arquivo_url}];
+  if(!arqs.length)return '';
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'+arqs.map(function(a){
+    return '<a class="av-btn av-btn-o av-btn-sm" href="'+esc(a.url)+'" target="_blank" rel="noopener" style="text-decoration:none">📄 '+esc(a.nome||'Arquivo')+'</a>';
+  }).join('')+'</div>';
+}
+function renderClient(){
+  var h=document.getElementById('cl-client'); if(!h)return;
+  if(!pesquisas.length){h.innerHTML='<div class="av-empty">Nenhuma pesquisa de clima registrada ainda.<br><span style="font-size:12px">As pesquisas realizadas nas visitas aparecerão aqui, com dashboard e comparativo.</span></div>';return;}
+  var ord=pesquisas.slice().sort(function(a,b){return a.data_referencia<b.data_referencia?1:-1;});
+  var p=ord[0]; // mais recente
+  var ind=indiceDe(p),med=mediaDe(p);
+  var part=(p.n_respondentes!=null&&p.total_colaboradores)?Math.round(p.n_respondentes/p.total_colaboradores*100):null;
+  var dash='<div class="av-card" style="padding:20px 22px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:6px">'+
+      '<div><div style="font-family:Nunito;font-weight:800;font-size:17px;color:var(--az1)">'+esc(p.titulo||'Pesquisa de Clima')+'</div>'+
+      '<div style="font-size:12.5px;color:var(--mt)">Referência: '+fmt(p.data_referencia)+'</div></div>'+
+      (part!=null?'<span class="av-badge av-b-blue"><span class="av-dot"></span>'+part+'% de participação · '+(p.n_respondentes||'?')+'/'+(p.total_colaboradores||'?')+'</span>':'')+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:150px 1fr;gap:22px;align-items:center;margin-top:10px">'+
+      '<div style="text-align:center">'+ring(ind,med)+'<div style="font-size:12px;color:var(--mt);margin-top:2px">média geral <b style="color:var(--tx)">'+n2(med)+'</b>/5</div></div>'+
+      '<div>'+dimBars(p)+'</div>'+
+    '</div>'+
+    arquivosLinks(p)+'</div>';
+  // histórico de ondas
+  var hist='';
+  if(ord.length>1){
+    hist='<div class="av-card" style="padding:16px 20px;margin-top:18px"><div style="font-family:Nunito;font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Pesquisas realizadas</div>'+
+      ord.map(function(x){var xi=indiceDe(x);return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd2);font-size:13px">'+
+        '<div><b>'+esc(x.titulo||'Pesquisa')+'</b> <span style="color:var(--mt)">· '+fmt(x.data_referencia)+'</span></div>'+
+        '<div style="display:flex;align-items:center;gap:12px"><span style="font-family:Nunito;font-weight:800;color:'+corMedia(mediaDe(x))+'">'+(xi!=null?xi+'%':'—')+'</span>'+arquivosLinks(x).replace('margin-top:14px','margin-top:0')+'</div></div>';}).join('')+'</div>';
+  }
+  h.innerHTML=dash+comparativo()+hist;
+}
+
+// ───────────────────────── ADMIN ─────────────────────────
+var _fileUrl='', _fileName='';
+async function loadAdmin(){
+  // popular select de clientes
+  var sel=document.getElementById('cl-a-cliente');
+  var clients=(window._admData&&_admData.clients)?_admData.clients:[];
+  if(sel)sel.innerHTML='<option value="">Selecione o cliente…</option>'+clients.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join('');
+  // preencher rótulos das dimensões
+  DIMS.forEach(function(d,i){var l=document.getElementById('cl-a-dl'+i);if(l)l.textContent=d.nome;});
+  // listar pesquisas existentes
+  var box=document.getElementById('cl-adm-list'); if(box)box.innerHTML='<div class="page-loading"><div class="spin"></div>Carregando...</div>';
+  var r=await sb.from('pesquisas_clima').select('*').order('data_referencia',{ascending:false});
+  if(r.error){if(box)box.innerHTML='<div class="av-empty" style="padding:20px">Rode <b>clima_alter.sql</b> no Supabase para habilitar.</div>';return;}
+  var map={};clients.forEach(function(c){map[c.id]=c.nome;});
+  if(box)box.innerHTML=(r.data&&r.data.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+    ['Cliente','Título','Referência','Índice',''].map(function(t){return '<th style="text-align:left;padding:8px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+
+    r.data.map(function(p){return '<tr><td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(map[p.cliente_id]||'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(p.titulo||'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+fmt(p.data_referencia)+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);font-family:Nunito;font-weight:800;color:var(--az1)">'+(indiceDe(p)!=null?indiceDe(p)+'%':'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)"><button class="av-btn av-btn-ghost av-btn-sm" style="color:var(--vm)" onclick="CL.del(\''+p.id+'\')">Excluir</button></td></tr>';}).join('')+
+    '</tbody></table>'):'<div class="av-empty" style="padding:20px">Nenhuma pesquisa cadastrada ainda.</div>';
+}
+async function onFile(input){
+  var file=input.files&&input.files[0]; if(!file)return;
+  var info=document.getElementById('cl-a-fileinfo'); if(info)info.textContent='Enviando '+file.name+'…';
+  var path='uploads/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var up=await sb.storage.from(BUCKET).upload(path,file,{upsert:true});
+  if(up.error){if(info)info.textContent='Erro no upload: '+up.error.message;return;}
+  var u=sb.storage.from(BUCKET).getPublicUrl(path);
+  _fileUrl=u.data.publicUrl; _fileName=file.name;
+  if(info)info.textContent='✓ '+file.name;
+}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+async function saveAdmin(){
+  var cliente_id=val('cl-a-cliente'); if(!cliente_id){alert('Selecione o cliente.');return;}
+  var titulo=val('cl-a-titulo'); if(!titulo){alert('Informe o título.');return;}
+  var indicadores=[],soma=0,cnt=0;
+  for(var i=0;i<DIMS.length;i++){var v=parseFloat(val('cl-a-d'+i));if(!isNaN(v)){indicadores.push({dimensao:DIMS[i].nome,media:v});soma+=v;cnt++;}}
+  if(cnt<DIMS.length){alert('Preencha a média (1–5) das 5 dimensões.');return;}
+  var media_geral=+(soma/cnt).toFixed(2), indice_geral=Math.round(media_geral/5*100);
+  var resp=parseInt(val('cl-a-resp'),10)||null, total=parseInt(val('cl-a-total'),10)||null;
+  var arquivos=_fileUrl?[{nome:_fileName||'Relatório',url:_fileUrl}]:[];
+  var payload={cliente_id:cliente_id,titulo:titulo,data_referencia:val('cl-a-data')||new Date().toISOString().slice(0,10),
+    n_respondentes:resp,total_colaboradores:total,indicadores:indicadores,media_geral:media_geral,indice_geral:indice_geral,arquivos:arquivos};
+  var r=await sb.from('pesquisas_clima').insert(payload).select();
+  if(r.error){alert('Erro ao salvar: '+r.error.message);return;}
+  if(window.showToast)showToast('Pesquisa de clima cadastrada.');
+  ['cl-a-titulo','cl-a-data','cl-a-resp','cl-a-total','cl-a-d0','cl-a-d1','cl-a-d2','cl-a-d3','cl-a-d4'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  _fileUrl='';_fileName='';var fi=document.getElementById('cl-a-fileinfo');if(fi)fi.textContent='';var fin=document.getElementById('cl-a-file');if(fin)fin.value='';
+  loadAdmin();
+}
+async function del(id){
+  if(!confirm('Excluir esta pesquisa de clima?'))return;
+  var r=await sb.from('pesquisas_clima').delete().eq('id',id);
+  if(r.error){alert('Erro: '+r.error.message);return;}
+  if(window.showToast)showToast('Pesquisa excluída.'); loadAdmin();
+}
+
+return {load:load,loadAdmin:loadAdmin,onFile:onFile,saveAdmin:saveAdmin,del:del};
+})();
+
 
 </script>
 </body>
