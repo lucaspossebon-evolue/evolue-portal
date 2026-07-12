@@ -1081,7 +1081,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           </div>
           <div style="margin-top:16px"><button class="av-btn av-btn-p" id="cl-a-savebtn" onclick="CL.saveAdmin()">Salvar pesquisa</button> <button class="av-btn av-btn-ghost" id="cl-a-cancelbtn" onclick="CL.cancelEdit()" style="display:none">Cancelar edição</button></div>
         </div>
-        <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Pesquisas cadastradas</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px"><div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px">Pesquisas cadastradas</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--mt)">Empresa:</span><select id="cl-f-cliente" onchange="CL.loadAdmin()" style="border:1.5px solid var(--bd);border-radius:var(--rsm);padding:6px 10px;font-family:'Nunito Sans';font-size:13px;background:#fff"><option value="">Todos os clientes</option></select></div></div>
         <div id="cl-adm-list"></div>
       </div>
       <div class="adm-page" id="adm-treinamentos">
@@ -1104,7 +1104,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           <div class="av-fld" style="margin-top:12px"><label>Link (opcional — vídeo, material)</label><input id="tr-a-url" placeholder="https://…"></div>
           <div style="margin-top:16px"><button class="av-btn av-btn-p" id="tr-a-savebtn" onclick="TR.saveAdmin()">Salvar treinamento</button> <button class="av-btn av-btn-ghost" id="tr-a-cancelbtn" onclick="TR.cancelEdit()" style="display:none">Cancelar edição</button></div>
         </div>
-        <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Treinamentos cadastrados</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px"><div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px">Treinamentos cadastrados</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--mt)">Empresa:</span><select id="tr-f-cliente" onchange="TR.loadAdmin()" style="border:1.5px solid var(--bd);border-radius:var(--rsm);padding:6px 10px;font-family:'Nunito Sans';font-size:13px;background:#fff"><option value="">Todos os clientes</option></select></div></div>
         <div id="tr-adm-list"></div>
       </div>
       <div class="adm-page" id="adm-central">
@@ -1133,7 +1133,7 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
           <div class="av-fld" style="margin-top:8px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600"><input type="checkbox" id="cn-a-ativo" checked style="width:auto;margin:0"> Ativo (visível para os clientes)</label></div>
           <div style="margin-top:12px"><button class="av-btn av-btn-p" id="cn-a-savebtn" onclick="CN.saveAdmin()">Publicar</button> <button class="av-btn av-btn-ghost" id="cn-a-cancelbtn" onclick="CN.cancelEdit()" style="display:none">Cancelar edição</button></div>
         </div>
-        <div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px;margin-bottom:10px">Conteúdos publicados</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px"><div style="font-family:'Nunito';font-weight:800;color:var(--az1);font-size:15px">Conteúdos publicados</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--mt)">Categoria:</span><select id="cn-f-cat" onchange="CN.loadAdmin()" style="border:1.5px solid var(--bd);border-radius:var(--rsm);padding:6px 10px;font-family:'Nunito Sans';font-size:13px;background:#fff"><option value="">Todas as categorias</option><option value="informativo">Informativos</option><option value="campanha">Campanhas de Saúde</option><option value="direitos">Direitos e Canais</option><option value="cartilha">Cartilhas</option></select></div></div>
         <div id="cn-adm-list"></div>
       </div>
 
@@ -3924,9 +3924,11 @@ async function loadAdmin(){
   var r=await sb.from('pesquisas_clima').select('*').order('data_referencia',{ascending:false});
   if(r.error){if(box)box.innerHTML='<div class="av-empty" style="padding:20px">Rode <b>clima_alter.sql</b> no Supabase para habilitar.</div>';return;}
   var map={};clients.forEach(function(c){map[c.id]=c.nome;});
-  if(box)box.innerHTML=(r.data&&r.data.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+  var _fs=document.getElementById('cl-f-cliente'); if(_fs){var _fc=_fs.value; _fs.innerHTML='<option value="">Todos os clientes</option>'+clients.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join(''); _fs.value=_fc;}
+  var _fv=(document.getElementById('cl-f-cliente')||{}).value||''; var rows=_fv?(r.data||[]).filter(function(x){return String(x.cliente_id)===String(_fv);}):(r.data||[]);
+  if(box)box.innerHTML=(rows.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
     ['Cliente','Título','Referência','Índice',''].map(function(t){return '<th style="text-align:left;padding:8px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+
-    r.data.map(function(p){return '<tr><td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(map[p.cliente_id]||'—')+'</td>'+
+    rows.map(function(p){return '<tr><td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(map[p.cliente_id]||'—')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(p.titulo||'—')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+fmt(p.data_referencia)+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2);font-family:Nunito;font-weight:800;color:var(--az1)">'+(indiceDe(p)!=null?indiceDe(p)+'%':'—')+'</td>'+
@@ -4046,9 +4048,11 @@ async function loadAdmin(){
   var r=await sb.from('treinamentos').select('*').order('cliente_id').order('ordem',{ascending:true});
   if(r.error){if(box)box.innerHTML='<div class="av-empty" style="padding:20px">Rode <b>treinamentos.sql</b> no Supabase para habilitar.</div>';return;}
   var map={};clients.forEach(function(c){map[c.id]=c.nome;});
-  if(box)box.innerHTML=(r.data&&r.data.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+  var _fs=document.getElementById('tr-f-cliente'); if(_fs){var _fc=_fs.value; _fs.innerHTML='<option value="">Todos os clientes</option>'+clients.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join(''); _fs.value=_fc;}
+  var _fv=(document.getElementById('tr-f-cliente')||{}).value||''; var rows=_fv?(r.data||[]).filter(function(x){return String(x.cliente_id)===String(_fv);}):(r.data||[]);
+  if(box)box.innerHTML=(rows.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
     ['Cliente','Título','Data','Status','Ordem',''].map(function(t){return '<th style="text-align:left;padding:8px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+
-    r.data.map(function(t){var s=stOf(t.status);return '<tr>'+
+    rows.map(function(t){var s=stOf(t.status);return '<tr>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(map[t.cliente_id]||'—')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.titulo)+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.data_label||'—')+'</td>'+
@@ -4152,9 +4156,10 @@ async function loadAdmin(){
   var box=document.getElementById('cn-adm-list'); if(box)box.innerHTML='<div class="page-loading"><div class="spin"></div>Carregando...</div>';
   var r=await sb.from('conteudos_nr1').select('*').order('categoria').order('ordem',{ascending:true});
   if(r.error){if(box)box.innerHTML='<div class="av-empty" style="padding:20px">Rode <b>conteudos_nr1.sql</b> no Supabase para habilitar.</div>';return;}
-  if(box)box.innerHTML=(r.data&&r.data.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+  var _fv=(document.getElementById('cn-f-cat')||{}).value||''; var rows=_fv?(r.data||[]).filter(function(x){return x.categoria===_fv;}):(r.data||[]);
+  if(box)box.innerHTML=(rows.length)?('<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
     ['Categoria','Título','Ordem','Status',''].map(function(t){return '<th style="text-align:left;padding:8px 10px;color:var(--mt);font-size:11px;text-transform:uppercase">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+
-    r.data.map(function(t){return '<tr>'+
+    rows.map(function(t){return '<tr>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(catLabel(t.categoria))+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+esc(t.titulo)+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid var(--bd2)">'+(t.ordem!=null?t.ordem:'—')+'</td>'+
