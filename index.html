@@ -1212,8 +1212,8 @@ body{font-family:"Nunito Sans",sans-serif;background:var(--cr);color:var(--tx);m
 //  ALTER TABLE clientes ADD COLUMN IF NOT EXISTS tipo_portal TEXT DEFAULT 'nr1';
 //  ALTER TABLE clientes ADD COLUMN IF NOT EXISTS secoes_personalizadas TEXT;
 // ══════════════════════════════════════════════
-const SUPABASE_URL = 'https://przkuyghvvkigqghsusl.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByemt1eWdodnZraWdxZ2hzdXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxODM0MDQsImV4cCI6MjA5Mjc1OTQwNH0.nlbhZKYw2jlF9_-ZPQ3qKJY7gVv0Er-drEIJRcQ9_2I'
+const SUPABASE_URL = 'https://wmfevnhfkgrwvernyqcf.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_UHvzB_OuCtbda_rGxunDXw_WGBIE6wH'
 const ADMIN_PASS   = 'admin123'
 
 // ══ SQL NECESSÁRIO NO SUPABASE ══════════════════
@@ -1233,7 +1233,7 @@ const ADMIN_PASS   = 'admin123'
 // ALTER TABLE acoes_plano ADD COLUMN IF NOT EXISTS objetivo_id uuid REFERENCES objetivos_diagnostico(id) ON DELETE SET NULL;
 // ════════════════════════════════════════════════
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'portal' } })
 
 // ══════════════════════════════════════════════
 //  ESTADO GLOBAL
